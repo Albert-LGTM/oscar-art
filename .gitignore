@@ -8,6 +8,9 @@ dist/
 # remove the first line below and keep ignoring only derived/.
 public/media/
 public/media/derived/
+# public/.assetsignore is tracked ON PURPOSE — it keeps public/ present in a fresh
+# clone. Without a tracked file in it, git omits the directory entirely and Wrangler's
+# Astro setup fails on a missing path. Do not add `public/` here.
 
 # Generated from Caddyfile.template. Never edit or commit the output.
 Caddyfile

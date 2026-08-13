@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config'
+import { defineConfig, passthroughImageService } from 'astro/config'
 import sitemap from '@astrojs/sitemap'
 
 /**
@@ -28,6 +28,25 @@ export default defineConfig({
   // a silent content defect in a site whose entire claim is factual accuracy.
   // Disabled deliberately; the CDN gzips anyway and the delta is <1 KB.
   compressHTML: false,
+
+  /**
+   * No image service.
+   *
+   * Astro defaults to a sharp-backed image service, but this project never uses
+   * `<Image />` or `astro:assets` — every derivative is produced by our own explicit
+   * pipeline (scripts/build-derivatives.mjs) precisely so that the colour handling is
+   * ours and is asserted in CI.
+   *
+   * So Astro's image service is dead weight AND a failure surface: it is a native
+   * dependency that has to load during the build, on build containers that increasingly
+   * block install scripts by default. Turning it off removes an entire class of "works
+   * locally, dies on the runner" failure and buys nothing back, because there is no
+   * image for it to optimise.
+   *
+   * We still depend on sharp directly — but only in our own scripts, where the failure
+   * is loud and the call sites are visible.
+   */
+  image: { service: passthroughImageService() },
 
   i18n: {
     locales: ['en', 'da'],

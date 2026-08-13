@@ -21,7 +21,8 @@
     "gen:csp": "node scripts/gen-csp.mjs",
     "smoke": "bash scripts/smoke.sh",
     "lint:links": "node scripts/lint-links.mjs",
-    "build:cf": "npm run seed:media && npm run build:media && npm run build && npm run gen:csp && npm run lint:links && npm run lint:semantics && npm run test:colour"
+    "build:cf": "npm run seed:media && npm run build:media && npm run build && npm run gen:csp && npm run lint:links && npm run lint:semantics && npm run test:colour",
+    "deploy": "npm run build:cf && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
@@ -30,7 +31,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.122.0"
   },
   "pinnedDependencyNotes": {
     "sharp": "Pinned EXACTLY, not ranged. sharp has silently broken colour handling at least twice (libvips #2862, #4008) and it is the only thing standing between the artwork and an sRGB conversion nobody notices on a developer monitor. Upgrading is a deliberate act, gated on `npm run test:colour` passing. 0.35.3 is also the floor for libvips CVE-2026-33327 / 33328 / 35590 / 35591."
