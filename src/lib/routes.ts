@@ -35,6 +35,10 @@ export const SEGMENTS = {
   press: { en: 'press', da: 'presse' },
   about: { en: 'about', da: 'om' },
   archive: { en: 'archive', da: 'arkivet' },
+  // Facet routes live under a literal segment so they can never collide with a work
+  // slug. /en/works/by/decade/2020s/ is five segments; a showing is four. Without the
+  // literal, a work slugged "decade" would silently shadow a filter.
+  by: { en: 'by', da: 'efter' },
   // Nested segment, only ever appearing inside a showing route.
   // TODO(terminology): confirm with the artist. "standpunkt" is chosen over a literal
   // "visning" because it names the camera POSITION rather than the act of viewing,
@@ -104,6 +108,17 @@ export const routes = {
    */
   viewpoint: (workSlug: string, showingSlug: string, n: number, locale: Locale) =>
     join(locale, segment('works', locale), workSlug, showingSlug, segment('view', locale), n),
+
+  /**
+   * A single-facet filtered index — a real, crawlable, JS-free URL.
+   *
+   * Deliberately SINGLE facet. Every combination of nine facet dimensions would be a
+   * combinatorial explosion of near-duplicate thin pages competing with the 41 records
+   * that should actually rank. One facet per URL keeps each page substantial and each
+   * result set worth landing on.
+   */
+  facet: (facet: string, value: string, locale: Locale) =>
+    join(locale, segment('works', locale), segment('by', locale), facet, value),
 
   exhibition: (slug: string, locale: Locale) =>
     join(locale, segment('exhibitions', locale), slug),

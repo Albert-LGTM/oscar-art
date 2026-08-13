@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content'
 import Base from '../../layouts/Base.astro'
+import Facets from '../../components/Facets.astro'
+import WorksSheet from '../../components/WorksSheet.astro'
 import { LOCALES, type Locale, resolveTranslated, title as titleOf } from '../../lib/i18n'
 import { routes, segment, type SegmentId } from '../../lib/routes'
 import { getWorkRecords, getAllShowings, nameResolver } from '../../lib/query'
@@ -74,26 +76,8 @@ const heading = t(HEADING[id]!, locale)
             ? 'Alle værker, nyeste først. Et kors (†) betyder, at værket ikke længere findes.'
             : 'All works, most recent first. A dagger (†) marks a work that no longer exists.'}
         </p>
-        <ol class="sheet">
-          {works.map((r) => {
-            const lost = LOST_STATUSES.includes(r.entry.data.existenceStatus)
-            const materials = resolveTranslated(r.entry.data.materials, locale).value
-            return (
-              <li>
-                <a data-astro-prefetch href={routes.work(r.entry.id, locale)}>
-                  <span class="sheet__title">
-                    <cite lang={r.entry.data.title.lang}>{titleOf(r.entry.data.title)}</cite>
-                    {lost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
-                  </span>
-                  <span class="sheet__year">{r.entry.data.year}</span>
-                  <span class="sheet__materials">{materials}</span>
-                  <span class="sheet__status">{t(EXISTENCE_STATUS_LABEL[r.entry.data.existenceStatus], locale)}</span>
-                  <span class="sheet__count">{ui.showingsCount[locale](r.showings.length)}</span>
-                </a>
-              </li>
-            )
-          })}
-        </ol>
+        <Facets locale={locale} records={works} />
+        <WorksSheet locale={locale} records={works} />
       </>
     ) : null}
 

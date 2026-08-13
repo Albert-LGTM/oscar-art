@@ -1,0 +1,68 @@
+---
+import { resolveTranslated, title as titleOf, type Locale } from '../lib/i18n'
+import { routes } from '../lib/routes'
+import type { WorkRecord } from '../lib/query'
+import { EXISTENCE_STATUS_LABEL, LOST_STATUSES } from '../lib/schema/vocab'
+import { ui, t } from '../lib/site'
+
+/**
+ * The contact sheet — metadata BEFORE media.
+ *
+ * A curator scans twenty works in the time two would take to load, so the index leads
+ * with facts: title, year, materials, existence status, showing count. Density is
+ * respect for the priority audience, not austerity for its own sake.
+ *
+ * Extracted so the works index and every filtered facet view render through ONE
+ * component. Two copies of a list is two places for the dagger, the status vocabulary
+ * or the showing count to quietly diverge.
+ */
+interface Props { locale: Locale; records: WorkRecord[] }
+const { locale, records } = Astro.props
+---
+
+{records.length === 0 ? (
+  <p class="sheet__empty">{locale === 'da' ? 'Ingen værker matcher.' : 'No works match.'}</p>
+) : (
+  <ol class="sheet">
+    {records.map((r) => {
+      const lost = LOST_STATUSES.includes(r.entry.data.existenceStatus)
+      const materials = resolveTranslated(r.entry.data.materials, locale).value
+      return (
+        <li>
+          <a data-astro-prefetch href={routes.work(r.entry.id, locale)}>
+            <span class="sheet__title">
+              <cite lang={r.entry.data.title.lang}>{titleOf(r.entry.data.title)}</cite>
+              {lost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
+            </span>
+            <span class="sheet__year">{r.entry.data.year}</span>
+            <span class="sheet__materials">{materials}</span>
+            <span class="sheet__status">{t(EXISTENCE_STATUS_LABEL[r.entry.data.existenceStatus], locale)}</span>
+            <span class="sheet__count">{ui.showingsCount[locale](r.showings.length)}</span>
+          </a>
+        </li>
+      )
+    })}
+  </ol>
+)}
+
+<style>
+  .sheet { display: grid; gap: 0; }
+  .sheet a {
+    display: grid;
+    grid-template-columns: minmax(12rem, 2fr) 4rem minmax(10rem, 3fr) minmax(8rem, 1fr) auto;
+    gap: var(--space-4);
+    align-items: baseline;
+    padding: var(--space-3) 0;
+    text-decoration: none;
+  }
+  .sheet a:hover cite { text-decoration: underline; }
+  .sheet__title cite { font-style: italic; font: var(--type-body); }
+  .sheet__year, .sheet__materials, .sheet__status, .sheet__count {
+    font: var(--type-meta); color: var(--ink-tertiary);
+  }
+  .sheet__empty { font: var(--type-caption); color: var(--ink-tertiary); }
+
+  @media (max-width: 48rem) {
+    .sheet a { grid-template-columns: 1fr; gap: var(--space-1); padding: var(--space-4) 0; }
+  }
+</style>

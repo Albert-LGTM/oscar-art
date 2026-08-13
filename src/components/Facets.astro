@@ -1,0 +1,155 @@
+---
+import type { Locale } from '../lib/i18n'
+import { routes } from '../lib/routes'
+import { facetsFor, type FacetKey, type WorkRecord } from '../lib/query'
+import { EXISTENCE_STATUS_LABEL, type ExistenceStatus } from '../lib/schema/vocab'
+import { ui, t } from '../lib/site'
+
+/**
+ * Facets — the questions a curator actually arrives with.
+ *
+ * "Can my room take this?" is the first thing asked of an installation, and answering
+ * it in the interface is worth more than any transition. Every facet here is a real
+ * shortlisting criterion: how much floor, how much ceiling, does it need blackout, does
+ * the work still exist.
+ *
+ * Eliasson's 23 pages of unfiltered grid — no filter UI at all, taxonomy reachable only
+ * as undocumented URL facets — is the bar to clear, and it is a low one.
+ *
+ * ── Why plain links, and no JavaScript ──────────────────────────────────────
+ * Each facet is a real crawlable URL that renders on the server. That means a filtered
+ * view can be sent to a colleague and it will show them what the sender saw; it works
+ * with JS disabled; and the back button behaves. Filter state living only in component
+ * memory — which is what Other Circle, Work In Progress and G. Colombel all ship — means
+ * a curator who filters to one decade and sends the link sends the unfiltered page.
+ *
+ * SINGLE facet per URL, deliberately. Combinations would multiply into thin
+ * near-duplicate pages competing with the records that should actually rank.
+ *
+ * Values with a zero count are never rendered: a filter that leads nowhere is a dead
+ * end wearing a control's clothes.
+ */
+
+interface Props {
+  locale: Locale
+  records: WorkRecord[]
+  /** The facet currently applied, if this is a filtered view. */
+  active?: { key: FacetKey; value: string }
+}
+
+const { locale, records, active } = Astro.props
+
+const GROUP_LABEL: Record<FacetKey, { en: string; da: string }> = {
+  decade: { en: 'Decade', da: 'Årti' },
+  status: { en: 'Status', da: 'Status' },
+  footprint: { en: 'Floor area needed', da: 'Nødvendigt gulvareal' },
+  blackout: { en: 'Light', da: 'Lys' },
+}
+
+const VALUE_LABEL: Record<string, { en: string; da: string }> = {
+  'under-50': { en: 'Under 50 m²', da: 'Under 50 m²' },
+  '50-150': { en: '50–150 m²', da: '50–150 m²' },
+  'over-150': { en: 'Over 150 m²', da: 'Over 150 m²' },
+  required: { en: 'Blackout required', da: 'Kræver mørklægning' },
+}
+
+function label(key: FacetKey, value: string): string {
+  if (key === 'status') return t(EXISTENCE_STATUS_LABEL[value as ExistenceStatus], locale)
+  return VALUE_LABEL[value] ? t(VALUE_LABEL[value]!, locale) : value
+}
+
+// Counts come from the full archive, not the filtered set, so a reader can see what
+// else is available from where they are standing.
+const counts = new Map<string, number>()
+for (const r of records) {
+  for (const f of facetsFor(r)) counts.set(`${f.key}:${f.value}`, (counts.get(`${f.key}:${f.value}`) ?? 0) + 1)
+}
+
+const groups = (['decade', 'status', 'footprint', 'blackout'] as FacetKey[])
+  .map((key) => ({
+    key,
+    values: [...counts.entries()]
+      .filter(([k]) => k.startsWith(`${key}:`))
+      .map(([k, count]) => ({ value: k.slice(key.length + 1), count }))
+      .sort((a, b) => a.value.localeCompare(b.value)),
+  }))
+  .filter((g) => g.values.length > 0)
+---
+
+<nav class="facets" aria-label={locale === 'da' ? 'Filtre' : 'Filters'}>
+  {groups.map((group) => (
+    <div class="facets__group">
+      <h2 class="facets__label">{t(GROUP_LABEL[group.key], locale)}</h2>
+      <ul>
+        {group.values.map(({ value, count }) => {
+          const isActive = active?.key === group.key && active.value === value
+          return (
+            <li>
+              <a
+                href={isActive ? routes.door('works', locale) : routes.facet(group.key, value, locale)}
+                aria-current={isActive ? 'true' : undefined}
+                data-astro-prefetch
+              >
+                {label(group.key, value)}
+                <span class="facets__count">{count}</span>
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  ))}
+
+  {active ? (
+    <p class="facets__clear">
+      <a href={routes.door('works', locale)}>
+        {locale === 'da' ? 'Ryd filter' : 'Clear filter'}
+      </a>
+    </p>
+  ) : null}
+</nav>
+
+<style>
+  .facets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+
+  .facets__label {
+    font: var(--type-meta);
+    color: var(--ink-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--space-2);
+  }
+
+  .facets__group ul { display: grid; gap: var(--space-1); }
+
+  .facets a {
+    font: var(--type-meta);
+    text-decoration: none;
+    display: inline-flex;
+    gap: var(--space-2);
+    align-items: baseline;
+    /* 2.5.8 Target Size (Minimum) — 24 CSS px at AA. */
+    min-height: 24px;
+  }
+  .facets a:hover { text-decoration: underline; }
+
+  /*
+   * The applied filter is marked by aria-current AND by ink weight AND by the accent —
+   * never by colour alone. Activating it again clears it, so the control is its own
+   * undo and there is no separate state to hunt for.
+   */
+  .facets a[aria-current] { color: var(--accent); font: var(--type-meta-strong); }
+
+  .facets__count { color: var(--ink-tertiary); }
+  .facets__clear { font: var(--type-meta); align-self: flex-end; }
+
+  @media (max-width: 40rem) {
+    .facets { gap: var(--space-4); }
+    .facets__group { flex: 1 1 45%; }
+  }
+</style>

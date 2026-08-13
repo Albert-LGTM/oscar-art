@@ -1,0 +1,88 @@
+---
+import Base from '../../../../../layouts/Base.astro'
+import Facets from '../../../../../components/Facets.astro'
+import WorksSheet from '../../../../../components/WorksSheet.astro'
+import { LOCALES, type Locale } from '../../../../../lib/i18n'
+import { routes, segment } from '../../../../../lib/routes'
+import { getWorkRecords, facetsFor, type FacetKey, type WorkRecord } from '../../../../../lib/query'
+import { EXISTENCE_STATUS_LABEL, type ExistenceStatus } from '../../../../../lib/schema/vocab'
+import { ui, t } from '../../../../../lib/site'
+
+/**
+ * A filtered works index — one facet, one URL, fully server-rendered.
+ *
+ * These pages exist so that "works needing under 50 m²" or "works that no longer exist"
+ * are things a curator can LINK TO, not just states they can reach. Filter state living
+ * only in component memory is the defect shared by Other Circle, Work In Progress and
+ * G. Colombel: filter to one decade, send the link, and the recipient gets everything.
+ *
+ * Only combinations that actually contain work are generated. A facet page with zero
+ * results is never built, so it can never be linked and can never be indexed.
+ */
+export async function getStaticPaths() {
+  const records = await getWorkRecords()
+
+  const buckets = new Map<string, WorkRecord[]>()
+  for (const r of records) {
+    for (const f of facetsFor(r)) {
+      const k = `${f.key}/${f.value}`
+      if (!buckets.has(k)) buckets.set(k, [])
+      buckets.get(k)!.push(r)
+    }
+  }
+
+  return LOCALES.flatMap((locale) =>
+    [...buckets.entries()].map(([k, matched]) => {
+      const [facet, value] = k.split('/') as [FacetKey, string]
+      return {
+        params: { locale, section: segment('works', locale), by: segment('by', locale), facet, value },
+        props: { facet, value, matched, all: records },
+      }
+    }),
+  )
+}
+
+interface Props { facet: FacetKey; value: string; matched: WorkRecord[]; all: WorkRecord[] }
+
+const locale = Astro.params.locale as Locale
+const { facet, value, matched, all } = Astro.props
+
+const VALUE_LABEL: Record<string, { en: string; da: string }> = {
+  'under-50': { en: 'needing under 50 m²', da: 'der kræver under 50 m²' },
+  '50-150': { en: 'needing 50–150 m²', da: 'der kræver 50–150 m²' },
+  'over-150': { en: 'needing over 150 m²', da: 'der kræver over 150 m²' },
+  required: { en: 'requiring blackout', da: 'der kræver mørklægning' },
+}
+
+const phrase = facet === 'status'
+  ? t(EXISTENCE_STATUS_LABEL[value as ExistenceStatus], locale)
+  : facet === 'decade'
+    ? (locale === 'da' ? `fra ${value}` : `from the ${value}`)
+    : VALUE_LABEL[value] ? t(VALUE_LABEL[value]!, locale) : value
+
+const heading = locale === 'da' ? `Værker ${phrase}` : `Works ${phrase}`
+---
+
+<Base
+  locale={locale}
+  title={heading}
+  description={`${matched.length} ${locale === 'da' ? 'værker' : 'works'} — ${phrase}`}
+>
+  <div class="shell index">
+    <h1>{heading}</h1>
+    <p class="index__note">
+      {matched.length} {locale === 'da' ? 'af' : 'of'} {all.length}
+      {' · '}
+      <a href={routes.door('works', locale)}>{locale === 'da' ? 'Alle værker' : 'All works'}</a>
+    </p>
+
+    <Facets locale={locale} records={all} active={{ key: facet, value }} />
+    <WorksSheet locale={locale} records={matched} />
+  </div>
+</Base>
+
+<style>
+  .index { padding-top: var(--space-6); }
+  .index h1 { font: var(--type-display); margin-bottom: var(--space-3); }
+  .index__note { font: var(--type-meta); color: var(--ink-tertiary); margin-bottom: var(--space-5); }
+</style>
