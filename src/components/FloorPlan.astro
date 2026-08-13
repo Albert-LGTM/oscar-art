@@ -68,6 +68,7 @@ function describe(cam: { at: [number, number] }): string {
 {drawable ? (
   <figure class="plan">
     <svg
+      data-plan
       viewBox={`${-pad} ${-pad} ${W + pad * 2} ${D + pad * 2}`}
       width="320"
       height={Math.round((320 * (D + pad * 2)) / (W + pad * 2))}
@@ -92,9 +93,17 @@ function describe(cam: { at: [number, number] }): string {
         <circle cx={plan!.doorAt[0]} cy={plan!.doorAt[1]} r={Math.max(W, D) * 0.022} class="plan__door" vector-effect="non-scaling-stroke" />
       ) : null}
 
+      {cameras.length > 1 ? (
+        <polyline
+          class="plan__route"
+          points={cameras.map((c) => `${c.at[0]},${c.at[1]}`).join(' ')}
+          vector-effect="non-scaling-stroke"
+        />
+      ) : null}
+
       {/* Camera positions, numbered to match the documentation order below. */}
       {cameras.map((c) => (
-        <g class="plan__cam">
+        <g class="plan__cam" data-cam>
           <circle cx={c.at[0]} cy={c.at[1]} r={Math.max(W, D) * 0.026} vector-effect="non-scaling-stroke" />
           <text x={c.at[0]} y={c.at[1]} dy="0.35em" font-size={Math.max(W, D) * 0.045}>{c.sequence}</text>
         </g>
@@ -133,8 +142,24 @@ function describe(cam: { at: [number, number] }): string {
   .plan__work { fill: var(--accent); fill-opacity: 0.8; stroke: none; }
   .plan__door { fill: var(--ground-page); stroke: var(--rule-strong); stroke-width: 1.25; }
 
-  .plan__cam circle { fill: var(--ground-page); stroke: var(--ink-secondary); stroke-width: 1; }
+  .plan__cam circle {
+    fill: var(--ground-page);
+    stroke: var(--ink-secondary);
+    stroke-width: 1;
+    transition: fill var(--cam-dur, 220ms) var(--ease-out),
+                stroke var(--cam-dur, 220ms) var(--ease-out);
+  }
   .plan__cam text { fill: var(--ink-secondary); text-anchor: middle; font-family: var(--font-meta); }
+
+  /* Where you are standing. The only thing that moves on this page, and it moves
+     because your position changed — not to decorate anything. */
+  .plan__cam[data-active] circle { fill: var(--accent); stroke: var(--accent); }
+  .plan__cam[data-active] text { fill: var(--ground-page); }
+
+  /* Drawn only under reduced motion: the whole route at once, so the traversal order is
+     legible without anything having to travel. */
+  .plan__route { fill: none; stroke: var(--rule-strong); stroke-width: 1; stroke-dasharray: 3 3; display: none; }
+  [data-show-route] .plan__route { display: block; }
 
   .plan figcaption { margin-top: var(--space-3); font: var(--type-meta); color: var(--ink-tertiary); }
   .plan__scale { margin-bottom: var(--space-2); }

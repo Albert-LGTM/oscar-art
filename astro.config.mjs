@@ -48,6 +48,34 @@ export default defineConfig({
    */
   image: { service: passthroughImageService() },
 
+  /**
+   * Link prefetching.
+   *
+   * This is an MPA — every navbar click is a full document navigation, which is one
+   * network round trip before anything can render. `hover` starts that fetch the moment
+   * the pointer touches a link (and on touchstart on mobile), so by the time the click
+   * lands the document is usually already in cache.
+   *
+   * `hover` rather than `viewport`: viewport-prefetching every visible link would pull
+   * whole pages nobody opens, which on a media-heavy archive and on mobile data is a
+   * cost paid by the visitor for our convenience. Hover is intent.
+   *
+   * Cost is ~1 KB of JS, and it respects Save-Data and slow connections automatically.
+   */
+  prefetch: {
+    /*
+     * OPT-IN, not prefetchAll.
+     *
+     * `prefetchAll: true` injected the prefetch script into EVERY page — including the
+     * inspection route, whose entire promise is zero first-party JavaScript. A stated
+     * guarantee that a config flag quietly revokes is worse than no guarantee, so the
+     * navigation opts in explicitly (`data-astro-prefetch` in the masthead and indexes)
+     * and the inspection route stays inert.
+     */
+    prefetchAll: false,
+    defaultStrategy: 'hover',
+  },
+
   i18n: {
     locales: ['en', 'da'],
     defaultLocale: 'en',

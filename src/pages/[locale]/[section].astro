@@ -80,7 +80,7 @@ const heading = t(HEADING[id]!, locale)
             const materials = resolveTranslated(r.entry.data.materials, locale).value
             return (
               <li>
-                <a href={routes.work(r.entry.id, locale)}>
+                <a data-astro-prefetch href={routes.work(r.entry.id, locale)}>
                   <span class="sheet__title">
                     <cite lang={r.entry.data.title.lang}>{titleOf(r.entry.data.title)}</cite>
                     {lost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}

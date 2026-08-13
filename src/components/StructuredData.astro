@@ -1,0 +1,116 @@
+---
+import { title as titleOf, resolveTranslated, type Locale } from '../lib/i18n'
+import { routes } from '../lib/routes'
+import { site } from '../lib/site'
+import type { WorkRecord, ShowingRecord } from '../lib/query'
+
+/**
+ * JSON-LD.
+ *
+ * Verified absent from every serious artist archive surveyed — olafureliasson.net,
+ * superflex.net, the Felix Gonzalez-Torres Foundation and holtsmithsonfoundation.org
+ * emit no `application/ld+json` at all — while the Whitney publishes ULAN and Wikidata
+ * identifiers and an API endpoint for the same material. The machine-readable layer that
+ * museums take for granted is simply missing from the artist side of the field.
+ *
+ * Honest about what this buys: `VisualArtwork` and `Person` produce NO rich result in
+ * Google today. They are emitted for semantic completeness and for the researchers and
+ * aggregators who consume structured data directly. `ImageObject` with a licence and
+ * `ExhibitionEvent` are the two that actually earn something.
+ *
+ * The rule this obeys: structured data must never assert more than the page does. Every
+ * value below is the same value a reader sees rendered — no invented dates, no inferred
+ * creators, nothing that could not be checked against the visible record.
+ */
+
+interface Props {
+  locale: Locale
+  work?: WorkRecord
+  showing?: ShowingRecord
+}
+
+const { locale, work, showing } = Astro.props
+const origin = Astro.site?.origin ?? ''
+const abs = (path: string) => origin + path
+
+const person = {
+  '@type': 'Person',
+  '@id': abs('/#artist'),
+  name: site.artistName,
+  ...(site.sameAs.length > 0 ? { sameAs: site.sameAs } : {}),
+}
+
+const graph: Record<string, unknown>[] = []
+
+if (work) {
+  const w = work.entry.data
+  const statement = resolveTranslated(w.statementOfSignificance, locale).value
+  const materials = resolveTranslated(w.materials, locale).value
+
+  graph.push({
+    '@type': 'VisualArtwork',
+    '@id': abs(routes.work(work.entry.id, locale)) + '#work',
+    name: titleOf(w.title),
+    creator: person,
+    dateCreated: String(w.year),
+    ...(materials ? { artMedium: materials } : {}),
+    ...(statement ? { description: statement } : {}),
+    // CDWA treats "variable" as a controlled qualifier, not an evasion — so say it
+    // rather than inventing a number the work does not have.
+    ...(w.dimensions.variable
+      ? { size: locale === 'da' ? 'Mål varierer' : 'Dimensions variable' }
+      : {}),
+    ...(w.dimensions.heightCm ? { height: { '@type': 'Distance', name: `${w.dimensions.heightCm} cm` } } : {}),
+    ...(w.dimensions.widthCm ? { width: { '@type': 'Distance', name: `${w.dimensions.widthCm} cm` } } : {}),
+    url: abs(routes.work(work.entry.id, locale)),
+  })
+
+  // Each showing is an event at a place, which is exactly what ExhibitionEvent models.
+  for (const s of work.showings) {
+    graph.push({
+      '@type': 'ExhibitionEvent',
+      '@id': abs(routes.showing(work.entry.id, s.entry.data.slug, locale)) + '#showing',
+      name: s.exhibition ? titleOf(s.exhibition.data.title) : titleOf(s.venue.data.name),
+      startDate: s.entry.data.dates.start,
+      ...(s.entry.data.dates.end ? { endDate: s.entry.data.dates.end } : {}),
+      location: {
+        '@type': 'Place',
+        name: titleOf(s.venue.data.name),
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: s.venue.data.city,
+          addressCountry: s.venue.data.country,
+        },
+      },
+      workFeatured: { '@id': abs(routes.work(work.entry.id, locale)) + '#work' },
+      url: abs(routes.showing(work.entry.id, s.entry.data.slug, locale)),
+    })
+  }
+}
+
+if (showing && work) {
+  // Images carry their own creator and copyright, separately from the artwork's — the
+  // CAA distinction, expressed in the graph rather than only in the caption.
+  for (const a of showing.entry.data.assets) {
+    if (a.kind !== 'image') continue
+    graph.push({
+      '@type': 'ImageObject',
+      '@id': abs(routes.inspect(a.id)) + '#image',
+      contentUrl: abs(a.file.src),
+      width: a.file.width,
+      height: a.file.height,
+      ...(a.credit.photographer !== 'unknown'
+        ? { creator: { '@type': 'Person', name: a.credit.photographer } }
+        : {}),
+      copyrightNotice: `artwork © ${a.credit.artworkCopyright ?? site.artistName}`,
+      representativeOfPage: a.role === 'establishing',
+    })
+  }
+}
+
+const jsonld = graph.length > 0
+  ? JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })
+  : null
+---
+
+{jsonld ? <script type="application/ld+json" set:html={jsonld} /> : null}

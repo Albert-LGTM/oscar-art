@@ -66,6 +66,20 @@ const alt = asset.alt.decorative ? '' : (described ?? captionText ?? '')
 ---
 
 <figure class="plate" data-role={asset.role}>
+  {/*
+    `decoding` is ALWAYS async below. Never `sync`.
+
+    `decoding="sync"` forces the browser to fully decode the image BEFORE presenting the
+    next frame — on the main thread, blocking paint and input. It reads like an
+    optimisation ("show it immediately") and is the exact opposite: on a 3000px-wide
+    AVIF it stalls the page for the length of the decode, and AVIF decodes far slower
+    than JPEG. Every route marks its first plate `priority`, so this cost a visible
+    freeze on EVERY navigation.
+
+    It also hid from synthetic testing: headless `--dump-dom` returns the DOM without
+    painting or decoding, so automated checks looked fine while a real browser stalled.
+    Measured through the wrong instrument, this bug is invisible.
+  */}
   <div class="plate__ground">
     <picture>
       {FORMATS.filter((f) => f !== 'jpg').map((format) => (
@@ -79,7 +93,7 @@ const alt = asset.alt.decorative ? '' : (described ?? captionText ?? '')
         height={file.height}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
-        decoding={priority ? 'sync' : 'async'}
+        decoding="async"
         fetchpriority={priority ? 'high' : 'auto'}
       />
     </picture>

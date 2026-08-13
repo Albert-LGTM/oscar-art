@@ -157,3 +157,99 @@ export async function nameResolver(): Promise<(id: string) => string> {
   const map = new Map(contributors.map((c) => [c.id, c.data.name]))
   return (id: string) => map.get(id) ?? id
 }
+
+// ---------------------------------------------------------------------------
+// Every image, flattened — the index behind the inspection route
+// ---------------------------------------------------------------------------
+
+export interface AssetRecord {
+  asset: Extract<Showing['data']['assets'][number], { kind: 'image' }>
+  work: Work
+  showing: Showing
+  venue: Venue
+}
+
+/**
+ * Every published image in the archive, addressable by its own id.
+ *
+ * This exists so that ANY artwork can be reached at full size in a neutral state from
+ * anywhere it appears. The brief's hard constraint is that artwork must ALWAYS have an
+ * undistorted, colour-faithful viewing state — "always" meaning reachable, not merely
+ * described. A guarantee with no route to it is a promise, not a property.
+ */
+export async function getAssetRecords(): Promise<AssetRecord[]> {
+  const showings = await getCollection('showings', isPublic)
+  const out: AssetRecord[] = []
+  for (const showing of showings) {
+    const work = await getEntry(showing.data.work)
+    const venue = await getEntry(showing.data.venue)
+    if (!work || !venue || work.data.state !== 'public') continue
+    for (const asset of showing.data.assets) {
+      if (asset.kind === 'image') out.push({ asset, work, showing, venue })
+    }
+  }
+  return out
+}
+
+// ---------------------------------------------------------------------------
+// Facets — the questions a curator actually arrives with
+// ---------------------------------------------------------------------------
+
+/**
+ * Facet values derived from the archive itself, never hand-maintained.
+ *
+ * These are the literal questions a curator with a floor plan and a budget is asking —
+ * "can my room take this?" — and answering them in the interface is worth more than any
+ * transition. No artist site in the survey offers them; Eliasson's 23 pages of
+ * unfiltered grid is the bar to clear.
+ */
+export type FacetKey = 'decade' | 'status' | 'blackout' | 'footprint'
+
+export interface FacetValue { key: FacetKey; value: string; label: { en: string; da: string }; count: number }
+
+const FOOTPRINT_BANDS: { max: number; label: { en: string; da: string }; slug: string }[] = [
+  { max: 50, slug: 'under-50', label: { en: 'Under 50 m²', da: 'Under 50 m²' } },
+  { max: 150, slug: '50-150', label: { en: '50–150 m²', da: '50–150 m²' } },
+  { max: Infinity, slug: 'over-150', label: { en: 'Over 150 m²', da: 'Over 150 m²' } },
+]
+
+export function facetsFor(record: WorkRecord): { key: FacetKey; value: string }[] {
+  const w = record.entry.data
+  const out: { key: FacetKey; value: string }[] = []
+
+  out.push({ key: 'decade', value: `${Math.floor(w.year / 10) * 10}s` })
+  out.push({ key: 'status', value: w.existenceStatus })
+
+  if (w.technical?.light === 'blackout') out.push({ key: 'blackout', value: 'required' })
+
+  const area = w.technical?.minimumFloorAreaM2
+  if (area !== undefined) {
+    const band = FOOTPRINT_BANDS.find((b) => area <= b.max)
+    if (band) out.push({ key: 'footprint', value: band.slug })
+  }
+  return out
+}
+
+const FACET_LABEL: Record<string, { en: string; da: string }> = {
+  ...Object.fromEntries(FOOTPRINT_BANDS.map((b) => [b.slug, b.label])),
+  required: { en: 'Blackout required', da: 'Kræver mørklægning' },
+}
+
+export function facetValueLabel(key: FacetKey, value: string, statusLabel: (v: string) => { en: string; da: string }) {
+  if (key === 'status') return statusLabel(value)
+  if (key === 'decade') return { en: value, da: value }
+  return FACET_LABEL[value] ?? { en: value, da: value }
+}
+
+/** All facet values present in the archive, with counts. Values with no works never
+ *  render — a filter that returns nothing is a dead end wearing a control's clothes. */
+export function collectFacets(records: WorkRecord[]): FacetValue[] {
+  const counts = new Map<string, number>()
+  for (const r of records) {
+    for (const f of facetsFor(r)) counts.set(`${f.key}:${f.value}`, (counts.get(`${f.key}:${f.value}`) ?? 0) + 1)
+  }
+  return [...counts.entries()].map(([k, count]) => {
+    const [key, value] = k.split(':') as [FacetKey, string]
+    return { key, value, count, label: { en: value, da: value } }
+  })
+}

@@ -1,10 +1,13 @@
 ---
 import Base from '../../../../layouts/Base.astro'
+import StructuredData from '../../../../components/StructuredData.astro'
 import Plate from '../../../../components/Plate.astro'
 import Caption from '../../../../components/Caption.astro'
 import FloorPlan from '../../../../components/FloorPlan.astro'
+import ViewpointTraversal from '../../../../components/ViewpointTraversal.astro'
 import { LOCALES, type Locale, resolveTranslated, title as titleOf } from '../../../../lib/i18n'
 import { routes, segment } from '../../../../lib/routes'
+import { SIZES } from '../../../../lib/image'
 import { getWorkRecords, nameResolver, type WorkRecord, type ShowingRecord } from '../../../../lib/query'
 import { formatDateRange, formatDimensions, formatArea, formatLength } from '../../../../lib/format'
 import {
@@ -82,6 +85,7 @@ const otherShowings = record.showings.filter((o) => o.entry.data.slug !== s.slug
   title={`${workTitle} — ${venueName}, ${s.dates.start.slice(0, 4)}`}
   description={resolveTranslated(w.statementOfSignificance, locale).value ?? undefined}
 >
+  <StructuredData slot="head" locale={locale} work={record} showing={showing} />
   <article class="shell showing">
     <header class="showing__head">
       <p class="showing__parent">
@@ -102,7 +106,7 @@ const otherShowings = record.showings.filter((o) => o.entry.data.slug !== s.slug
     {s.space ? (
       <section class="showing__block" aria-labelledby="space-h">
         <h2 id="space-h">{t(ui.asInstalled, locale)}</h2>
-        <div class="showing__space">
+        <div class="showing__space" data-traversal>
           {/* Renders only when the room was measured. An empty instrument is absent,
               never a placeholder. */}
           <FloorPlan space={s.space} locale={locale} viewpointCount={viewpoints.length} />
@@ -135,17 +139,20 @@ const otherShowings = record.showings.filter((o) => o.entry.data.slug !== s.slug
       {ordered.map((img, i) => {
         const n = viewpoints.indexOf(img)
         return (
-          <div class="showing__plate" id={n >= 0 ? `view-${n + 1}` : undefined}>
-            <p class="showing__role">
+          <div class="showing__plate" id={n >= 0 ? `view-${n + 1}` : undefined} data-viewpoint={n >= 0 ? n + 1 : undefined}>
+            <p class="showing__role" data-viewpoint-label tabindex="-1">
               {t(IMAGE_ROLE_LABEL[img.role], locale)}
               {n >= 0 && viewpoints.length > 1 ? <> · {ui.viewpoint[locale](n + 1, viewpoints.length)}</> : null}
             </p>
-            <Plate asset={img} locale={locale} sizes="(min-width: 60rem) 76vw, 100vw" priority={i === 0} />
+            <Plate asset={img} locale={locale} sizes={SIZES.record} priority={i === 0} />
             <Caption
               locale={locale}
               caption={captionFor(img)}
               declareColour={{ profile: img.file.colourProfile, width: img.file.width, height: img.file.height, href: img.file.src }}
             />
+            <p class="showing__inspect">
+              <a href={routes.inspect(img.id)}>{t(ui.inspect, locale)}</a>
+            </p>
           </div>
         )
       })}
@@ -181,6 +188,8 @@ const otherShowings = record.showings.filter((o) => o.entry.data.slug !== s.slug
       </nav>
     ) : null}
 
+    <ViewpointTraversal />
+
     {s.lastReviewedOn ? (
       <p class="showing__reviewed">
         {locale === 'da' ? 'Posten er sidst gennemgået' : 'Record last reviewed'} {s.lastReviewedOn}
@@ -211,6 +220,11 @@ const otherShowings = record.showings.filter((o) => o.entry.data.slug !== s.slug
   .showing__plates { display: grid; gap: var(--space-7); margin: var(--space-6) 0; }
   .showing__plate { display: grid; gap: var(--space-3); scroll-margin-top: 5rem; }
   .showing__role { font: var(--type-meta); color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  /* tabindex="-1" makes this a focus destination for keyboard traversal; it must show
+     a focus ring when it receives focus programmatically, or the reader is relocated
+     with no indication of where they landed. */
+  .showing__role:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+  .showing__inspect { font: var(--type-meta); }
 
   .showing__others { display: grid; gap: var(--space-2); margin-top: var(--space-3); }
   .showing__others a { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: baseline; min-height: 24px; }

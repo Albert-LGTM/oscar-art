@@ -4,6 +4,7 @@ import Plate from '../../components/Plate.astro'
 import Caption from '../../components/Caption.astro'
 import { LOCALES, type Locale, resolveTranslated, title as titleOf } from '../../lib/i18n'
 import { routes, DOORS } from '../../lib/routes'
+import { SIZES } from '../../lib/image'
 import { getFeatured, getOnView, doorCounts, nameResolver } from '../../lib/query'
 import { formatDateRange } from '../../lib/format'
 import { ui, t, site } from '../../lib/site'
@@ -66,7 +67,7 @@ const practiceLine = locale === 'da'
 
   {lead && leadShowing && leadImage ? (
     <section class="frontispiece">
-      <Plate asset={leadImage} locale={locale} sizes="100vw" priority={true} />
+      <Plate asset={leadImage} locale={locale} sizes={SIZES.frontispiece} priority={true} />
       <div class="shell frontispiece__caption">
         <Caption
           locale={locale}
@@ -124,7 +125,7 @@ const practiceLine = locale === 'da'
       <ul>
         {DOORS.map((door) => (
           <li>
-            <a href={routes.door(door, locale)}>
+            <a data-astro-prefetch href={routes.door(door, locale)}>
               <span class="doors__name">{t(ui.doors[door], locale)}</span>
               <span class="doors__count">{counts[door]}</span>
             </a>
@@ -143,7 +144,7 @@ const practiceLine = locale === 'da'
             const statement = resolveTranslated(r.entry.data.statementOfSignificance, locale).value
             return (
               <li>
-                <a href={routes.work(r.entry.id, locale)}>
+                <a data-astro-prefetch href={routes.work(r.entry.id, locale)}>
                   <cite lang={r.entry.data.title.lang}>{titleOf(r.entry.data.title)}</cite>
                   {r.isLost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
                   <span class="selected__year">{r.entry.data.year}</span>

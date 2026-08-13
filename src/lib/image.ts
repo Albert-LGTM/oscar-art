@@ -21,6 +21,47 @@
  *  upscaled derivative is a fabricated version of the work. */
 export const WIDTHS = [640, 960, 1280, 1600, 2000, 2400, 3200] as const
 
+/**
+ * `sizes` values, derived from the ACTUAL layout rather than guessed.
+ *
+ * This is not a micro-optimisation. `sizes` is what the browser uses to choose a
+ * candidate, and an inaccurate value is not a rounding error — it is a multiplier on
+ * how many pixels have to be DECODED before the page can paint.
+ *
+ * The first cut passed `76vw` for a plate that is actually constrained by
+ * `.shell { max-width: 84rem }`. On a 3840px monitor that resolved to 2918px, so the
+ * browser fetched the 3200w derivative and decoded ~6.8 megapixels in order to paint
+ * an image 1160px wide — roughly SEVEN TIMES the pixels needed. Chromium absorbed it;
+ * Firefox, whose AVIF decode path is slower, spent seconds on it per navigation.
+ *
+ * The arithmetic, so the next person can check it rather than trust it:
+ *   .shell   max-width 84rem = 1344px, padding clamp(1rem, 4vw, 3rem) → 96px at large
+ *   plate    mat padding clamp(1rem, 3vw, 2.75rem) → 88px at large
+ *   ⇒ a plate inside .shell is at most 1344 − 96 − 88 = 1160px wide, ever.
+ *
+ * If either of those values changes, these strings must change with them.
+ */
+export const SIZES = {
+  /**
+   * A plate inside `.shell` — every record route. Hard-capped at 1160px because the
+   * container is, so above ~84rem the viewport width is irrelevant.
+   */
+  record:
+    '(min-width: 84rem) 1160px, ' +
+    '(min-width: 48rem) calc(100vw - 184px), ' +
+    'calc(100vw - 64px)',
+
+  /**
+   * The home frontispiece — full-bleed, outside `.shell`, so it genuinely does scale
+   * with the viewport. Capped at 2000px: beyond that the extra decode cost buys
+   * nothing a viewer can see at normal distance, and the plan's LCP budget is 250 KB.
+   */
+  frontispiece: '(min-width: 2000px) 2000px, calc(100vw - 88px)',
+
+  /** Index thumbnails, when the sheet gains imagery. */
+  thumb: '(min-width: 48rem) 240px, 40vw',
+} as const
+
 export const FORMATS = ['avif', 'webp', 'jpg'] as const
 export type Format = (typeof FORMATS)[number]
 

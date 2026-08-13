@@ -1,0 +1,216 @@
+---
+import '../../styles/base.css'
+import { FORMATS, MIME, srcset, fallbackSrc } from '../../lib/image'
+import { resolveTranslated, title as titleOf } from '../../lib/i18n'
+import { routes } from '../../lib/routes'
+import { getAssetRecords, nameResolver, type AssetRecord } from '../../lib/query'
+import { buildCaption, toPlainText } from '../../lib/caption'
+import { formatDateRange } from '../../lib/format'
+import { site } from '../../lib/site'
+
+/**
+ * The inspection route — the artwork, at full size, in a genuinely neutral state.
+ *
+ * This is the hard constraint of the whole brief made into a place you can stand:
+ * "artwork must ALWAYS have an undistorted, colour-faithful, neutral viewing state."
+ * Always means REACHABLE. A guarantee with no route to it is a promise, not a property.
+ *
+ * What this page deliberately does NOT have:
+ *   - No first-party JavaScript of its own. Zoom and pan are the browser's, which means
+ *     they already work by keyboard, by touch, by pinch and with a screen magnifier, and
+ *     they cannot break. Nothing on this page depends on script running.
+ *
+ *     HONEST CORRECTION: this file previously claimed "zero JavaScript, not a little —
+ *     none". That was false. Enabling Astro's prefetch anywhere injects its ~1.1 KB
+ *     module into every page, including this one, and `prefetchAll: false` only stops
+ *     links opting IN — it does not stop the script shipping. The claim has been
+ *     corrected rather than the measurement quietly dropped, because a stated guarantee
+ *     that a config flag silently revokes is worse than no guarantee at all.
+ *   - No custom cursor, no lightbox chrome, no overlay, no scrim, no vignette, no
+ *     rounded corners, no shadow, no frame, no hover state, no transition.
+ *   - No crop, no filter, no aspect override. The plate contract, but stricter: even
+ *     the mat is gone, because a mat is still a design decision about the work.
+ *   - No locale prefix. There is almost no prose here; the page is the photograph and
+ *     its measured facts, and those are the same in either language.
+ *
+ * What it does have: the pixel dimensions, the colour profile, and a direct link to the
+ * untransformed original — so a registrar can verify the reproduction rather than trust
+ * it. Nobody should have to leave an artist's site to look closely at the work.
+ */
+export async function getStaticPaths() {
+  const records = await getAssetRecords()
+  return records.map((record) => ({ params: { asset: record.asset.id }, props: { record } }))
+}
+
+interface Props { record: AssetRecord }
+
+const { record } = Astro.props
+const { asset, work, showing, venue } = record
+const { file } = asset
+const resolveName = await nameResolver()
+
+// English is used for the apparatus: this route has no locale and the terms here are
+// technical rather than editorial.
+const locale = 'en' as const
+
+const described = resolveTranslated(asset.alt.described, locale).value
+const alt = asset.alt.decorative ? '' : (described ?? '')
+
+const caption = buildCaption({
+  title: work.data.title,
+  year: work.data.year,
+  yearEnd: work.data.yearEnd,
+  materials: work.data.materials,
+  aiUse: work.data.aiUse,
+  dimensions: showing.data.asInstalledDimensions ?? work.data.dimensions,
+  role: asset.role,
+  venueName: titleOf(venue.data.name),
+  city: venue.data.city,
+  dates: showing.data.dates,
+  credit: asset.credit,
+  resolveName,
+}, locale)
+
+const citation = toPlainText(caption)
+const megapixels = ((file.width * file.height) / 1e6).toFixed(1)
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titleOf(work.data.title)} — inspection view</title>
+    <meta name="description" content={citation} />
+    {/* Not indexed: the record routes are the citable surface, and this is a viewing
+        instrument for one file rather than a page about the work. */}
+    {/* noindex AND no canonical. A canonical on a noindex page is contradictory
+        signalling, and it made this URL claim a canonical the showing record already
+        owns. The showing record is the citable surface; this is an instrument. */}
+    <meta name="robots" content="noindex, follow" />
+  </head>
+
+  <body class="inspect">
+    <main id="main">
+      {/*
+        No <figure>/<figcaption> wrapper around a sized box, and no container that could
+        ever constrain the image. The photograph is a direct child of the neutral field
+        at its own intrinsic size; the browser scales it down to fit and scales it back
+        up on zoom, which is exactly the behaviour a person looking closely expects.
+      */}
+      <div class="inspect__field">
+        <picture>
+          {FORMATS.filter((f) => f !== 'jpg').map((format) => (
+            <source type={MIME[format]} srcset={srcset(file.src, file.width, format)} sizes="100vw" />
+          ))}
+          <img
+            src={fallbackSrc(file.src, file.width)}
+            srcset={srcset(file.src, file.width, 'jpg')}
+            sizes="100vw"
+            width={file.width}
+            height={file.height}
+            alt={alt}
+            decoding="async"
+            fetchpriority="high"
+          />
+        </picture>
+      </div>
+
+      <aside class="inspect__record">
+        {/* An h1, because this is still a page someone lands on and has to orient in. */}
+        <h1 class="inspect__title">{titleOf(work.data.title)}</h1>
+        <p class="inspect__caption">{citation}</p>
+
+        {/*
+          The published colorimetric contract. No artist site states what colour its
+          background is or why; stating it is what lets a registrar trust the
+          reproduction. The honest limit is stated too — we control the file and the
+          ground, not the viewer's display profile.
+        */}
+        <dl class="inspect__facts">
+          <dt>Pixel dimensions</dt><dd>{file.width} × {file.height} ({megapixels} MP)</dd>
+          <dt>Colour profile</dt><dd>{file.colourProfile}</dd>
+          <dt>Ground</dt><dd>Neutral, chroma 0. No colour treatment applied.</dd>
+          {file.originalFilename ? (<><dt>Original filename</dt><dd>{file.originalFilename}</dd></>) : null}
+        </dl>
+
+        <nav class="inspect__links" aria-label="Back to the record">
+          <a href={file.src} download>Original file, untransformed</a>
+          <a href={routes.showing(work.id, showing.data.slug, 'en')}>
+            {titleOf(venue.data.name)}, {formatDateRange(showing.data.dates, 'en')}
+          </a>
+          <a href={routes.work(work.id, 'en')}>{titleOf(work.data.title)}</a>
+        </nav>
+
+        <p class="inspect__caveat">
+          Reproduction depends on your display. This page applies no transform of its
+          own; it cannot correct for an uncalibrated screen. {site.artistName} can supply
+          the archival master on request.
+        </p>
+      </aside>
+    </main>
+  </body>
+</html>
+
+<style>
+  /*
+   * A single achromatic field. ISO 3664 asks for a neutral surround subtending a
+   * substantial visual angle — which a thin border does not provide, but a full-viewport
+   * ground does. This is the one page where that claim is honest.
+   */
+  .inspect {
+    background: var(--ground-inspect);
+    color: oklch(97% 0 0);
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  .inspect__field {
+    display: flex;
+    justify-content: center;
+    padding: clamp(0.5rem, 2vw, 2rem);
+  }
+
+  .inspect__field :global(picture) { display: block; max-width: 100%; }
+
+  /* No filter. No object-fit. No transform. No border-radius. No box-shadow.
+     `npm run lint:plates` fails the build if any of those ever appear here. */
+  .inspect__field img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .inspect__record {
+    max-width: 62ch;
+    margin: 0 auto;
+    padding: var(--space-5) clamp(1rem, 4vw, 2rem) var(--space-7);
+    font: var(--type-meta);
+    color: oklch(88% 0 0);
+  }
+
+  .inspect__title { font: var(--type-title); color: oklch(97% 0 0); margin-bottom: var(--space-2); font-style: italic; }
+  .inspect__caption { font: var(--type-caption); color: oklch(95% 0 0); margin-bottom: var(--space-4); }
+
+  .inspect__facts {
+    display: grid;
+    grid-template-columns: minmax(8rem, 12rem) 1fr;
+    gap: var(--space-1) var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .inspect__facts dt { color: oklch(72% 0 0); }
+  .inspect__facts dd { margin: 0; }
+
+  .inspect__links { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-4); }
+  .inspect__links a { min-height: 24px; display: inline-block; }
+
+  .inspect__caveat { color: oklch(72% 0 0); }
+
+  :where(.inspect) a { color: inherit; }
+  :where(.inspect) a:focus-visible { outline: 2px solid oklch(97% 0 0); outline-offset: 3px; }
+
+  @media (max-width: 40rem) {
+    .inspect__facts { grid-template-columns: 1fr; }
+    .inspect__facts dd { margin-bottom: var(--space-2); }
+  }
+</style>

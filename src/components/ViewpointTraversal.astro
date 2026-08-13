@@ -1,0 +1,113 @@
+---
+/**
+ * The signature interaction: moving between documented positions in a room.
+ *
+ * This is the one authored interaction on the site, and it is the only one that is
+ * ABOUT the work rather than applied to it. Moving between viewpoints of one showing is
+ * moving through the room — so the floor plan tracks where you are standing, and the
+ * change of position is the thing that animates. Nothing here decorates a photograph.
+ *
+ * ── Why it is built as an enhancement over a plain document ──────────────────
+ * Without JavaScript this component contributes nothing and the page is unchanged: the
+ * viewpoints are already a stack of plates, and the plan's camera positions are already
+ * ordinary anchors to them. That is a complete, usable experience. The island adds
+ * position feedback and keyboard traversal on top of it. It cannot break the record,
+ * because the record does not depend on it.
+ *
+ * ── Choreography ────────────────────────────────────────────────────────────
+ *  Trigger      ←/→, or activating a camera position, or simply scrolling
+ *  Moves        the active camera marker in the plan; the plate does not move
+ *  Duration     220ms; 0ms on the second activation within 150ms (the "riffle")
+ *  Easing       one ease, the same one used everywhere else
+ *  Interruptible  yes — retargets from the current computed value, never queues
+ *  Keyboard     ←/→ traverse; the markers are links in a nav and remain tabbable
+ *  Touch        scrolling drives it; no gesture to learn, nothing hidden
+ *  Reduced motion  the marker does not travel — instead the full traversal order is
+ *                  drawn as a numbered polyline, so the information the movement was
+ *                  carrying is RESTORED rather than removed
+ *
+ * ── What it deliberately does not do ────────────────────────────────────────
+ * It does not move, scale, fade, mask or filter the photograph. The plan's own rule is
+ * that motion may live in transitions but never on the work, and a plate that slides is
+ * a plate that was moved for someone's pleasure rather than the viewer's.
+ */
+---
+
+<script>
+  /*
+   * ~1.4 KB. No framework, no animation library, no scroll library.
+   *
+   * Reduced motion is read from a single reactive matchMedia and consulted at the
+   * moment of every state change — not baked in at load. CSS-only reduced-motion is a
+   * lie the moment anything animates in JavaScript, and this is that moment.
+   */
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-traversal]')) {
+    const plan = root.querySelector<SVGSVGElement>('[data-plan]')
+    const markers = [...root.querySelectorAll<SVGGElement>('[data-cam]')]
+    const plates = [...document.querySelectorAll<HTMLElement>('[data-viewpoint]')]
+    if (!plan || markers.length === 0 || plates.length === 0) continue
+
+    // The reduced-motion variant is not an absence. It draws the whole traversal order
+    // at once, so a reader who cannot use motion still sees the route through the room.
+    if (reduce.matches) plan.setAttribute('data-show-route', 'true')
+    reduce.addEventListener('change', () => {
+      plan.toggleAttribute('data-show-route', reduce.matches)
+    })
+
+    let active = -1
+    let lastMove = 0
+
+    const setActive = (next: number, scroll = false) => {
+      if (next < 0 || next >= plates.length || next === active) return
+
+      // The riffle: holding an arrow key should flick through positions like loose
+      // sheets, not queue 220ms animations behind each other.
+      const now = performance.now()
+      const fast = now - lastMove < 150
+      lastMove = now
+
+      root.style.setProperty('--cam-dur', reduce.matches || fast ? '0ms' : '220ms')
+
+      active = next
+      markers.forEach((m, i) => m.toggleAttribute('data-active', i === next))
+      plan.setAttribute('data-active', String(next + 1))
+
+      if (scroll) {
+        plates[next]!.scrollIntoView({
+          behavior: reduce.matches ? 'auto' : 'smooth',
+          block: 'start',
+        })
+        // Move focus to the arriving plate so keyboard traversal actually relocates the
+        // user rather than only moving a marker they may not be looking at.
+        const h = plates[next]!.querySelector<HTMLElement>('[data-viewpoint-label]')
+        h?.focus({ preventScroll: true })
+      }
+    }
+
+    // Scrolling is the primary driver: the plan reports where you are, unprompted.
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue
+          const i = plates.indexOf(e.target as HTMLElement)
+          if (i >= 0) setActive(i)
+        }
+      },
+      { rootMargin: '-45% 0px -45% 0px', threshold: 0 },
+    )
+    for (const p of plates) io.observe(p)
+
+    // ←/→ traverse. Deliberately NOT bound to ↑/↓: those are the reader's scroll keys,
+    // and capturing them is keyboard hijacking by the same logic that bans scroll
+    // hijacking. Ignored while the caret is in a field or a modifier is held.
+    document.addEventListener('keydown', (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const t = e.target as HTMLElement | null
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
+      if (e.key === 'ArrowRight') { e.preventDefault(); setActive(active + 1, true) }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); setActive(active - 1, true) }
+    })
+  }
+</script>

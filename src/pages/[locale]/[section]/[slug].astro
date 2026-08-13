@@ -1,5 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro'
+import StructuredData from '../../../components/StructuredData.astro'
 import { LOCALES, type Locale, resolveTranslated, title as titleOf, gloss } from '../../../lib/i18n'
 import { routes, segment } from '../../../lib/routes'
 import { getWorkRecords, type WorkRecord } from '../../../lib/query'
@@ -62,6 +63,7 @@ const PX_PER_M = 92 / maxSpan
   title={`${workTitle}, ${w.year}`}
   description={statement.value ?? materials.value ?? undefined}
 >
+  <StructuredData slot="head" locale={locale} work={record} />
   <article class="shell record">
     <header class="record__head">
       <h1>
@@ -136,7 +138,7 @@ const PX_PER_M = 92 / maxSpan
           const venueName = titleOf(s.venue.data.name)
           return (
             <li class="ledger__item">
-              <a href={routes.showing(record.entry.id, s.entry.data.slug, locale)}>
+              <a data-astro-prefetch href={routes.showing(record.entry.id, s.entry.data.slug, locale)}>
                 {/*
                   The glyph renders ONLY when the room was measured. An empty instrument
                   is absent, never a placeholder: a page that advertises what the artist

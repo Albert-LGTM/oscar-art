@@ -64,7 +64,7 @@ const documentTitle = bareTitle ? title : `${title} — ${site.artistName}`
         <nav class="masthead__nav" aria-label={locale === 'da' ? 'Hovedmenu' : 'Main'} data-print-hide>
           <ul>
             {DOORS.map((door) => (
-              <li><a href={routes.door(door, locale)}>{t(ui.doors[door], locale)}</a></li>
+              <li><a data-astro-prefetch href={routes.door(door, locale)}>{t(ui.doors[door], locale)}</a></li>
             ))}
           </ul>
         </nav>
