@@ -64,8 +64,20 @@ for (const file of pages) {
 
   // Site-absolute internal links only. External URLs are a separate concern (they need
   // network access and a different cadence — see the press link `urlCheckedOn` field).
-  for (const m of html.matchAll(/(?:href|src)="(\/[^"]*)"/g)) {
-    const url = m[1]
+  const targets = []
+  for (const m of html.matchAll(/(?:href|src)="(\/[^"]*)"/g)) targets.push(m[1])
+
+  // srcset carries the image the browser ACTUALLY downloads. Reading only `src` meant
+  // the checker saw the JPEG fallback and was blind to every AVIF and WebP derivative —
+  // so a build could lose its entire modern-format payload and still pass.
+  for (const m of html.matchAll(/srcset="([^"]*)"/g)) {
+    for (const candidate of m[1].split(',')) {
+      const url = candidate.trim().split(/\s+/)[0]
+      if (url && url.startsWith('/')) targets.push(url)
+    }
+  }
+
+  for (const url of targets) {
     checked++
     if (!(await resolves(url))) {
       if (!broken.has(url)) broken.set(url, new Set())

@@ -112,13 +112,34 @@ The output is static, so Pages is a clean fit. Two settings, then done:
 
 | Setting | Value |
 |---|---|
-| Build command | `npm run build:cf` |
+| Build command | **`npm run build:cf`** — not `npm run build` |
 | Output directory | `dist` |
-| Node version | `22` (set `NODE_VERSION=22`) |
+| Node version | Cloudflare's default (24) is fine; `engines` requires ≥ 22.12 |
 
-`build:cf` seeds media → builds derivatives → builds the site → generates the CSP.
+### `npm run build` is the wrong command here, and it fails silently
+
+Running plain `astro build` on Cloudflare produces a **green build that ships a broken
+site**: 29 pages, **zero images**, and no security headers. It does not error, because
+`public/media/` is generated (and gitignored), and the plates are plain `<img>` tags
+whose missing files are a runtime 404 rather than a build failure.
+
+`build:cf` does the whole job and **fails loudly** if any part of it did not:
+
+```
+seed:media → build:media → build → gen:csp → lint:links → lint:semantics → test:colour
+```
+
+The last three are the guard rail. `lint:links` exits 1 when a referenced image is
+missing, so the media-less build that would otherwise deploy green now stops the
+deployment instead.
+
 `gen-csp.mjs` emits `dist/_headers` and `dist/_redirects` from the **same directive
 list** as the Caddyfile, so the two hosts cannot drift apart.
+
+**`sharp` is a `dependency`, not a `devDependency`** — deliberately. It is required at
+build time, and any platform that prunes dev dependencies under `NODE_ENV=production`
+would otherwise kill the media pipeline and produce exactly the silent-empty-build
+failure above.
 
 Verify the real deployment with the same 21 checks the container gets:
 

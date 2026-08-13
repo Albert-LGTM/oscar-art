@@ -21,15 +21,15 @@
     "gen:csp": "node scripts/gen-csp.mjs",
     "smoke": "bash scripts/smoke.sh",
     "lint:links": "node scripts/lint-links.mjs",
-    "build:cf": "npm run seed:media && npm run build:media && npm run build && npm run gen:csp"
+    "build:cf": "npm run seed:media && npm run build:media && npm run build && npm run gen:csp && npm run lint:links && npm run lint:semantics && npm run test:colour"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^7.2.1"
+    "astro": "^7.2.1",
+    "sharp": "0.35.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "sharp": "0.35.3",
     "typescript": "^5.9.3"
   },
   "pinnedDependencyNotes": {
