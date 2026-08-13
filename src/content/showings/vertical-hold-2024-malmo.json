@@ -1,0 +1,61 @@
+{
+  "work": "vertical-hold",
+  "venue": "malmo-konsthall-annex",
+  "exhibition": "2024-nordic-assembly",
+  "slug": "2024-malmo-konsthall-annex",
+  "dates": { "start": "2024-09-14", "end": "2024-12-01", "precision": "day" },
+  "kind": "restaging",
+  "asInstalledDimensions": { "variable": false, "heightCm": 440, "widthCm": 720, "depthCm": 610 },
+  "space": {
+    "roomWidthM": 7.9,
+    "roomDepthM": 15.2,
+    "ceilingHeightM": 5.4,
+    "floorAreaM2": 120.1,
+    "dedicatedSpace": false,
+    "wallSurface": { "en": "Exposed brick, unpainted", "da": "Blank mur, umalet" },
+    "floorSurface": { "en": "Oiled pine boards", "da": "Oliebehandlede fyrreplanker" },
+    "light": "ambient",
+    "soundIsolation": false,
+    "plan": {
+      "vertices": [[0, 0], [7.9, 0], [7.9, 15.2], [0, 15.2]],
+      "doorAt": [3.9, 0],
+      "workFootprint": [[0.6, 8.4], [6.8, 8.4], [6.8, 14.6], [0.6, 14.6]],
+      "cameras": [
+        { "sequence": 1, "at": [3.9, 1.1], "bearingDeg": 2 },
+        { "sequence": 2, "at": [7.2, 11.4], "bearingDeg": 250 }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "vh-2024-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": { "src": "/media/vh-2024-01.jpg", "width": 3000, "height": 1688, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": { "described": { "en": "The same scaffold, one tier taller, seen down the length of a narrow brick hall. It stands at the far end, leaning away from the left-hand wall, its monitors the only light source in the frame.", "da": "Samme stillads, ét niveau højere, set ned gennem en smal murstenshal. Det står for enden og hælder væk fra venstre væg; monitorerne er billedets eneste lyskilde." }, "decorative": false },
+      "credit": { "photographer": "unknown", "photoCreditKind": "by", "courtesy": "Konsthallens Annex" },
+      "viewingDistanceM": 13.2
+    },
+    {
+      "id": "vh-2024-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": { "src": "/media/vh-2024-02.jpg", "width": 2400, "height": 3000, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": { "described": { "en": "From beside the work, the scaffold's six bays recede toward the brick end wall. Daylight from an unseen window falls across the lower three tiers, washing out their static.", "da": "Fra siden af værket løber stilladsets seks fag mod murstensgavlen. Dagslys fra et vindue uden for billedet falder hen over de tre nederste niveauer og udvasker sendestøjen." }, "decorative": false },
+      "credit": { "photographer": "unknown", "photoCreditKind": "by", "courtesy": "Konsthallens Annex" }
+    }
+  ],
+  "contributors": [{ "contributor": "nils-agger", "role": "curator" }],
+  "note": {
+    "en": "Re-staged one tier taller to suit the 5.4 m ceiling, and turned to lean away from the load-bearing left wall rather than the right.",
+    "da": "Genopført ét niveau højere for at passe til det 5,4 m høje loft, og vendt så det hælder væk fra den bærende venstre væg i stedet for den højre."
+  },
+  "notRecorded": {
+    "en": "Daylight reached the lower tiers for roughly three hours each afternoon and substantially changed the work. No photograph records it at that hour.",
+    "da": "Dagslys nåede de nederste niveauer i cirka tre timer hver eftermiddag og ændrede værket væsentligt. Intet fotografi dokumenterer det på det tidspunkt."
+  },
+  "state": "public",
+  "lastReviewedOn": "2026-02-11"
+}

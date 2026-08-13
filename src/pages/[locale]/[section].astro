@@ -1,0 +1,333 @@
+---
+import { getCollection } from 'astro:content'
+import Base from '../../layouts/Base.astro'
+import { LOCALES, type Locale, resolveTranslated, title as titleOf } from '../../lib/i18n'
+import { routes, segment, type SegmentId } from '../../lib/routes'
+import { getWorkRecords, getAllShowings, nameResolver } from '../../lib/query'
+import { formatDateRange, formatArea, formatLength } from '../../lib/format'
+import { EXISTENCE_STATUS_LABEL, LOST_STATUSES } from '../../lib/schema/vocab'
+import { site, ui, t } from '../../lib/site'
+
+/**
+ * The doors, and the utility routes.
+ *
+ * Five doors are not five modes: they are genuinely different QUESTIONS over one
+ * dataset. A researcher navigating by exhibition and a curator navigating by spatial
+ * requirement are not two audiences needing two skins — they are two queries needing
+ * two indexes. Every one of them is derived from Work + Showing, so none can rot
+ * independently of the archive.
+ *
+ * Register here is DENSE and metadata-forward, deliberately. Eliasson's 23 pages of
+ * unfiltered image grid is the bar to clear, and a curator scans twenty works in the
+ * time two would take to load. Density is respect for the priority audience.
+ */
+export async function getStaticPaths() {
+  const ids: SegmentId[] = ['works', 'exhibitions', 'venues', 'chronology', 'texts', 'press', 'about', 'archive']
+  return LOCALES.flatMap((locale) =>
+    ids.map((id) => ({ params: { locale, section: segment(id, locale) }, props: { id } })),
+  )
+}
+
+interface Props { id: SegmentId }
+
+const locale = Astro.params.locale as Locale
+const { id } = Astro.props
+
+const works = await getWorkRecords()
+const showings = await getAllShowings()
+const resolveName = await nameResolver()
+
+const HEADING: Record<string, { en: string; da: string }> = {
+  works: ui.doors.works, exhibitions: ui.doors.exhibitions, venues: ui.doors.venues,
+  chronology: ui.doors.chronology, texts: ui.doors.texts,
+  press: ui.press, about: ui.about, archive: ui.archive,
+}
+
+// Loaded lazily per section so an index route never pays for a collection it does not
+// render — the JS budget is a build-time discipline as much as a runtime one.
+const exhibitions = id === 'exhibitions' ? await getCollection('exhibitions', (e) => e.data.state === 'public') : []
+const venues = id === 'venues' ? await getCollection('venues', (v) => v.data.state === 'public') : []
+const texts = id === 'texts' ? await getCollection('texts', (x) => x.data.state === 'public').catch(() => []) : []
+const pressItems = id === 'press' ? await getCollection('press', (p) => p.data.state === 'public').catch(() => []) : []
+const cvEntries = id === 'about' ? await getCollection('cv').catch(() => []) : []
+
+const showingsByVenue = new Map<string, number>()
+if (id === 'venues') for (const s of showings) showingsByVenue.set(s.venue.id, (showingsByVenue.get(s.venue.id) ?? 0) + 1)
+
+const exhibitionVenue = new Map<string, string>()
+if (id === 'exhibitions') {
+  for (const v of await getCollection('venues')) exhibitionVenue.set(v.id, `${titleOf(v.data.name)}, ${v.data.city}`)
+}
+
+const heading = t(HEADING[id]!, locale)
+---
+
+<Base locale={locale} title={heading}>
+  <div class="shell index">
+    <h1>{heading}</h1>
+
+    {/* ── Works: dense contact sheet, metadata before media ──────────────── */}
+    {id === 'works' ? (
+      <>
+        <p class="index__note">
+          {locale === 'da'
+            ? 'Alle værker, nyeste først. Et kors (†) betyder, at værket ikke længere findes.'
+            : 'All works, most recent first. A dagger (†) marks a work that no longer exists.'}
+        </p>
+        <ol class="sheet">
+          {works.map((r) => {
+            const lost = LOST_STATUSES.includes(r.entry.data.existenceStatus)
+            const materials = resolveTranslated(r.entry.data.materials, locale).value
+            return (
+              <li>
+                <a href={routes.work(r.entry.id, locale)}>
+                  <span class="sheet__title">
+                    <cite lang={r.entry.data.title.lang}>{titleOf(r.entry.data.title)}</cite>
+                    {lost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
+                  </span>
+                  <span class="sheet__year">{r.entry.data.year}</span>
+                  <span class="sheet__materials">{materials}</span>
+                  <span class="sheet__status">{t(EXISTENCE_STATUS_LABEL[r.entry.data.existenceStatus], locale)}</span>
+                  <span class="sheet__count">{ui.showingsCount[locale](r.showings.length)}</span>
+                </a>
+              </li>
+            )
+          })}
+        </ol>
+      </>
+    ) : null}
+
+    {/* ── Exhibitions ────────────────────────────────────────────────────── */}
+    {id === 'exhibitions' ? (
+      <ol class="rows">
+        {exhibitions.sort((a, b) => b.data.dates.start.localeCompare(a.data.dates.start)).map((e) => (
+          <li>
+            <span class="rows__main">
+              <cite lang={e.data.title.lang}>{titleOf(e.data.title)}</cite>
+            </span>
+            <span class="rows__meta">{exhibitionVenue.get(e.data.venue.id)}</span>
+            <span class="rows__meta">{formatDateRange(e.data.dates, locale)}</span>
+            <span class="rows__meta">{e.data.type}</span>
+          </li>
+        ))}
+      </ol>
+    ) : null}
+
+    {/* ── Venues: a route no artist site offers and every institution recognises ── */}
+    {id === 'venues' ? (
+      <ol class="rows">
+        {venues.sort((a, b) => titleOf(a.data.name).localeCompare(titleOf(b.data.name))).map((v) => (
+          <li>
+            <span class="rows__main">{titleOf(v.data.name)}</span>
+            <span class="rows__meta">{v.data.city}, {v.data.country}</span>
+            <span class="rows__meta">{v.data.kind}</span>
+            <span class="rows__meta">{ui.showingsCount[locale](showingsByVenue.get(v.id) ?? 0)}</span>
+          </li>
+        ))}
+      </ol>
+    ) : null}
+
+    {/* ── Chronology: every showing, the complete record ──────────────────── */}
+    {id === 'chronology' ? (
+      <>
+        <p class="index__note">
+          {locale === 'da'
+            ? 'Alle opførelser, nyeste først. Dette er den fulde liste, ikke et udvalg.'
+            : 'Every showing, most recent first. This is the complete list, not a selection.'}
+        </p>
+        <ol class="rows">
+          {showings.map((s) => (
+            <li>
+              <span class="rows__main">
+                <a href={routes.showing(s.entry.data.work.id, s.entry.data.slug, locale)}>
+                  {titleOf(s.venue.data.name)}, {s.venue.data.city}
+                </a>
+              </span>
+              <span class="rows__meta">{formatDateRange(s.entry.data.dates, locale)}</span>
+              <span class="rows__meta">
+                {s.entry.data.space?.floorAreaM2 ? formatArea(s.entry.data.space.floorAreaM2, locale) : ''}
+                {s.entry.data.space?.ceilingHeightM ? ` · ${formatLength(s.entry.data.space.ceilingHeightM, locale)}` : ''}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </>
+    ) : null}
+
+    {/* ── Texts ──────────────────────────────────────────────────────────── */}
+    {id === 'texts' ? (
+      texts.length === 0
+        ? <p class="index__empty">{locale === 'da' ? 'Ingen tekster endnu.' : 'No texts yet.'}</p>
+        : (
+          <ol class="rows">
+            {texts.sort((a, b) => b.data.date.localeCompare(a.data.date)).map((x) => (
+              <li>
+                <span class="rows__main"><cite lang={x.data.title.lang}>{titleOf(x.data.title)}</cite></span>
+                <span class="rows__meta">{x.data.author}</span>
+                <span class="rows__meta">{x.data.date}</span>
+                <span class="rows__meta" lang={x.data.language}>{x.data.kind}</span>
+              </li>
+            ))}
+          </ol>
+        )
+    ) : null}
+
+    {/* ── Press: ungated asset delivery, SUPERFLEX model ──────────────────── */}
+    {id === 'press' ? (
+      <>
+        <div class="prose measure">
+          <p>
+            {locale === 'da'
+              ? 'Pressebilleder kan bruges frit i redaktionel omtale. Den fulde billedtekst med fotografkredit skal altid følge med. Billeder må ikke beskæres, farvekorrigeres eller på anden måde ændres.'
+              : 'Press images may be used freely in editorial coverage. The complete caption, including the photographer credit, must accompany each image. Images may not be cropped, recoloured or otherwise modified.'}
+          </p>
+          <p class="index__note">
+            {/* VISDA membership determines this paragraph entirely; in Denmark only VISDA
+                can issue image licences with aftalelicens effect. Plan §32, decision 5. */}
+            {site.visdaMember === undefined
+              ? (locale === 'da'
+                  ? 'Alle øvrige former for brug: kontakt nedenfor. (VISDA-forhold afklares inden lancering.)'
+                  : 'All other uses: contact below. (VISDA position to be confirmed before launch.)')
+              : ''}
+          </p>
+          <p><strong>{site.contact.name}</strong> · <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a></p>
+        </div>
+
+        {pressItems.length > 0 ? (
+          <ol class="rows">
+            {pressItems.sort((a, b) => b.data.date.localeCompare(a.data.date)).map((p) => (
+              <li>
+                <span class="rows__main">
+                  <cite lang={p.data.title.lang}>{titleOf(p.data.title)}</cite>
+                </span>
+                <span class="rows__meta">{p.data.publication}</span>
+                <span class="rows__meta">{p.data.author}</span>
+                <span class="rows__meta">{p.data.date}</span>
+              </li>
+            ))}
+          </ol>
+        ) : null}
+      </>
+    ) : null}
+
+    {/* ── About: named human, derived CV ──────────────────────────────────── */}
+    {id === 'about' ? (
+      <>
+        <div class="prose measure">
+          <p>{locale === 'da'
+            ? 'PLACEHOLDER biografi. Erstattes i fase 0 med kunstnerens egen tekst i 50 og 150 ord.'
+            : 'PLACEHOLDER biography. Replaced in Phase 0 with the artist’s own text at 50 and 150 words.'}</p>
+          <p>
+            <strong>{site.contact.name}</strong><br />
+            <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
+            {site.contact.phone ? <> · {site.contact.phone}</> : null}
+          </p>
+        </div>
+
+        <h2 class="index__sub">{locale === 'da' ? 'Udstillinger' : 'Exhibitions'}</h2>
+        {/* DERIVED from Showings. Never typed twice, so the CV cannot drift from the
+            archive — the failure that leaves Johan Bech Jespersen with two chronologies
+            that disagree, and Bill Viola with an unmaintained CV. */}
+        <ol class="rows">
+          {showings.map((s) => (
+            <li>
+              <span class="rows__main">{s.entry.data.dates.start.slice(0, 4)}</span>
+              <span class="rows__meta">
+                <a href={routes.showing(s.entry.data.work.id, s.entry.data.slug, locale)}>
+                  {/* The exhibition title when there is one; otherwise the venue, which
+                      is what a CV line reads as for an uncurated or solo presentation. */}
+                  {s.exhibition ? titleOf(s.exhibition.data.title) : titleOf(s.venue.data.name)}
+                </a>
+              </span>
+              <span class="rows__meta">{titleOf(s.venue.data.name)}, {s.venue.data.city}, {s.venue.data.country}</span>
+            </li>
+          ))}
+        </ol>
+
+        {cvEntries.length > 0 ? (
+          <>
+            <h2 class="index__sub">{locale === 'da' ? 'Uddannelse og andet' : 'Education and other'}</h2>
+            <ol class="rows">
+              {cvEntries.sort((a, b) => b.data.year - a.data.year).map((c) => (
+                <li>
+                  <span class="rows__main">{c.data.year}{c.data.yearEnd ? `–${c.data.yearEnd}` : ''}</span>
+                  <span class="rows__meta">{resolveTranslated(c.data.title, locale).value}</span>
+                  <span class="rows__meta">{c.data.city}{c.data.country ? `, ${c.data.country}` : ''}</span>
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : null}
+      </>
+    ) : null}
+
+    {/* ── Archive: scope, method, known gaps ──────────────────────────────── */}
+    {id === 'archive' ? (
+      <div class="prose measure">
+        {/*
+          The Felix Gonzalez-Torres Foundation publishes exactly this and it is what
+          converts a website into an archive of record: declared scope, declared method,
+          and openly declared gaps. Almost no artist site does it.
+        */}
+        <p>{locale === 'da'
+          ? 'Dette arkiv er den primære kilde til kunstnerens praksis. Det opdateres løbende og afspejler hvert værks historie, som den er kendt på gennemgangsdatoen anført på posten.'
+          : 'This archive is the primary source of record for the practice. It is updated continually and reflects each work’s history as known at the review date stated on the record.'}</p>
+
+        <h2 class="index__sub">{locale === 'da' ? 'Struktur' : 'Structure'}</h2>
+        <p>{locale === 'da'
+          ? 'Et værk er én post. Hver gang værket har været opstillet, er det en selvstændig post med sit eget sted, sine egne datoer, sine egne fotografier og sine egne rummål. Det er derfor det samme værk kan se forskelligt ud fra sted til sted: det er ikke uoverensstemmelser i arkivet, men forskelle i rummene.'
+          : 'A work is one record. Each time it has been installed is a separate record with its own venue, dates, photographs and room measurements. This is why the same work looks different from place to place: those are not inconsistencies in the archive but differences between rooms.'}</p>
+
+        <h2 class="index__sub">{locale === 'da' ? 'Kendte mangler' : 'Known gaps'}</h2>
+        <p>{locale === 'da'
+          ? 'Ikke alle opførelser har plantegning, fotografkredit eller præcise datoer. Hvor en oplysning mangler, står feltet tomt frem for at blive udfyldt med et gæt. Det, dokumentationen ikke kan gengive — lyd, lys, varighed, skala — er noteret på den enkelte post.'
+          : 'Not every showing has a floor plan, a photographer credit or exact dates. Where a fact is not known the field is left empty rather than filled with a guess. What the documentation cannot carry — sound, light, duration, scale — is noted on the individual record.'}</p>
+
+        <p class="index__note">
+          {locale === 'da' ? 'Indhold er PLACEHOLDER indtil fase 0.' : 'Content is PLACEHOLDER until Phase 0.'}
+        </p>
+      </div>
+    ) : null}
+  </div>
+</Base>
+
+<style>
+  .index { padding-top: var(--space-6); }
+  .index h1 { font: var(--type-display); margin-bottom: var(--space-4); }
+  .index__sub { font: var(--type-meta-strong); text-transform: uppercase; letter-spacing: 0.06em; margin: var(--space-6) 0 var(--space-3); }
+  .index__note { font: var(--type-meta); color: var(--ink-tertiary); margin-bottom: var(--space-5); }
+  .index__empty { font: var(--type-caption); color: var(--ink-tertiary); }
+  .prose p { margin-bottom: var(--space-4); }
+
+  /* Contact sheet: metadata IS the content. A curator scans twenty works in the time
+     two would take to load, so the index leads with facts, not pictures. */
+  .sheet { display: grid; gap: 0; }
+  .sheet a {
+    display: grid;
+    grid-template-columns: minmax(12rem, 2fr) 4rem minmax(10rem, 3fr) minmax(8rem, 1fr) auto;
+    gap: var(--space-4);
+    align-items: baseline;
+    padding: var(--space-3) 0;
+    text-decoration: none;
+  }
+  .sheet a:hover cite { text-decoration: underline; }
+  .sheet__title cite { font-style: italic; font: var(--type-body); }
+  .sheet__year, .sheet__materials, .sheet__status, .sheet__count { font: var(--type-meta); color: var(--ink-tertiary); }
+
+  .rows { display: grid; }
+  .rows li {
+    display: grid;
+    grid-template-columns: minmax(12rem, 2fr) minmax(8rem, 2fr) minmax(6rem, 1fr) auto;
+    gap: var(--space-4);
+    align-items: baseline;
+    padding: var(--space-3) 0;
+  }
+  .rows__main { font: var(--type-body); }
+  .rows__main cite { font-style: italic; }
+  .rows__meta { font: var(--type-meta); color: var(--ink-tertiary); }
+
+  @media (max-width: 48rem) {
+    .sheet a, .rows li { grid-template-columns: 1fr; gap: var(--space-1); }
+    .sheet a { padding: var(--space-4) 0; }
+  }
+</style>

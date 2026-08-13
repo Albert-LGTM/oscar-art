@@ -1,0 +1,137 @@
+---
+import { FORMATS, MIME, srcset, fallbackSrc } from '../lib/image'
+import { resolveTranslated, type Locale } from '../lib/i18n'
+import type { ImageRole } from '../lib/schema/vocab'
+
+/**
+ * Plate — the mat contract.
+ *
+ * THE POINT OF THIS COMPONENT IS WHAT IT REFUSES.
+ *
+ * The brief's hardest constraint is that artwork must always have an undistorted,
+ * colour-faithful viewing state, and that no effect may change its colour or
+ * proportions. Every reference site surveyed states some version of that intention and
+ * then breaks it — because the intention lived in a style guide rather than in code:
+ *
+ *   - G. Colombel built the correct primitive (a per-item --aspect-ratio variable) and
+ *     then fed it `1 / 1` for every asset of every project, plus a permanent
+ *     `fakeScale = 1.1` overscan.
+ *   - Matthew Pothier had Sanity hotspot data available and collapsed thumbnails to
+ *     fixed 50×50 squares on mobile anyway.
+ *   - Work In Progress applies `filter: grayscale(1)` to artist photographs and never
+ *     fully returns the colour, even on hover.
+ *
+ * So the guarantee is enforced STRUCTURALLY. This component's Props interface has no
+ * field for a crop, an aspect ratio, a focal point, a filter, a fit mode, or a class
+ * name — there is no way to express a violation through its API, and adding one would
+ * require editing this file, which is exactly the deliberate act it should be.
+ * `npm run lint:plates` is the second line of defence, catching any CSS rule that
+ * reaches a plate from outside.
+ *
+ * Discipline decays. Geometry does not.
+ */
+
+interface Props {
+  asset: {
+    file: { src: string; width: number; height: number; colourProfile: string }
+    alt: { described?: { en?: string; da?: string }; decorative: boolean }
+    role: ImageRole
+    caption?: { en?: string; da?: string }
+  }
+  locale: Locale
+  /** Layout hint for `sizes` only. It selects which derivative to download; it can
+   *  never change how the image is drawn. */
+  sizes?: string
+  /** True for the LCP element only — the first work on a record or the home
+   *  frontispiece. Everything else is lazy. */
+  priority?: boolean
+}
+
+const { asset, locale, sizes = '100vw', priority = false } = Astro.props
+const { file } = asset
+
+const described = resolveTranslated(asset.alt.described, locale).value
+const captionText = resolveTranslated(asset.caption, locale).value
+
+/**
+ * Alt text resolution.
+ *
+ * `alt=""` on an artwork is a catalogue failure, not a styling detail — every one of
+ * the seven reference sites ships it, Johan Bech Jespersen's on all 25 artworks. An
+ * empty alt is therefore only ever produced by an EXPLICIT `decorative: true`, never
+ * as a silent default. When a description is genuinely missing, the caption carries
+ * the record rather than the image announcing nothing.
+ */
+const alt = asset.alt.decorative ? '' : (described ?? captionText ?? '')
+---
+
+<figure class="plate" data-role={asset.role}>
+  <div class="plate__ground">
+    <picture>
+      {FORMATS.filter((f) => f !== 'jpg').map((format) => (
+        <source type={MIME[format]} srcset={srcset(file.src, file.width, format)} sizes={sizes} />
+      ))}
+      <img
+        src={fallbackSrc(file.src, file.width)}
+        srcset={srcset(file.src, file.width, 'jpg')}
+        sizes={sizes}
+        width={file.width}
+        height={file.height}
+        alt={alt}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding={priority ? 'sync' : 'async'}
+        fetchpriority={priority ? 'high' : 'auto'}
+      />
+    </picture>
+  </div>
+  <slot />
+</figure>
+
+<style>
+  /*
+   * The ground behind every artwork is chroma EXACTLY 0.000 in both themes, so no
+   * chromatic induction shifts the work. A warm reading ground is correct for text and
+   * actively wrong here: a tinted surround measurably alters the perceived colour of
+   * the image sitting on it. This is the registrar's mount-board decision, made in CSS.
+   *
+   * The colorimetric contract is published beneath the plate (see Caption.astro) so a
+   * reader can verify it rather than take it on trust.
+   */
+  .plate {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .plate__ground {
+    background: var(--ground-plate);
+    display: flex;
+    /* The plate is sized by the image, never the reverse. A fixed-height container
+       here is what forces a crop, and that is the whole failure mode. */
+    align-items: flex-start;
+    justify-content: center;
+    padding: var(--plate-mat);
+  }
+
+  .plate__ground :global(picture) {
+    display: block;
+    max-width: 100%;
+  }
+
+  /*
+   * width/height on the <img> element give the intrinsic ratio, so the box is reserved
+   * before decode and CLS is structural rather than tuned. `height: auto` keeps the
+   * native aspect: there is no object-fit anywhere in this file, and none may be
+   * added — `npm run lint:plates` fails the build if one appears.
+   *
+   * No blur-up, no LQIP, no placeholder colour. A plate has either arrived, or the
+   * ground is showing with its caption already legible beneath it. Showing a blurred
+   * approximation of an artwork is showing a false version of the work.
+   */
+  .plate__ground img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+</style>

@@ -1,0 +1,68 @@
+---
+import '../styles/base.css'
+import { routes } from '../lib/routes'
+import { site } from '../lib/site'
+
+/**
+ * A real 404.
+ *
+ * Brady Perron and Matthew Pothier both return HTTP 200 for any path — a soft 404 that
+ * poisons indexing and tells a curator that a mistyped URL is a real page. This one is
+ * served with a genuine 404 status by Caddy (see Caddyfile.template).
+ *
+ * Bilingual on one page, because a 404 has no locale context to inherit: the request
+ * that produced it may not have carried a valid locale prefix at all. Both languages
+ * are shown rather than guessing from Accept-Language, which would be wrong half the
+ * time and invisible when it was.
+ *
+ * URLs in this archive are citation targets. If a work URL has genuinely moved, it
+ * belongs in the `redirect` collection as a permanent redirect — never a silent rename,
+ * and never a page that quietly becomes the homepage.
+ */
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page not found — {site.artistName}</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <main id="main" class="shell notfound">
+      <h1>Page not found <span lang="da">· Siden findes ikke</span></h1>
+
+      <p class="notfound__body">
+        This address does not resolve. If you followed a link to a specific work or
+        showing, the record may have been given a corrected URL — the archive keeps
+        permanent redirects for anything that moves, so a broken link here is worth
+        reporting.
+      </p>
+
+      <p class="notfound__body" lang="da">
+        Denne adresse findes ikke. Hvis du fulgte et link til et bestemt værk eller en
+        bestemt opførelse, kan posten have fået en rettet URL — arkivet bevarer
+        permanente omdirigeringer for alt, der flyttes, så et brudt link her er værd at
+        melde.
+      </p>
+
+      <nav class="notfound__ways" aria-label="Ways forward">
+        <ul>
+          <li><a href={routes.home('en')}>English</a></li>
+          <li><a href={routes.home('da')} lang="da">Dansk</a></li>
+          <li><a href={`mailto:${site.contact.email}`}>{site.contact.email}</a></li>
+        </ul>
+      </nav>
+    </main>
+
+    <style>
+      .notfound { padding-top: var(--space-7); max-width: var(--measure); }
+      .notfound h1 { font: var(--type-display); margin-bottom: var(--space-5); }
+      .notfound h1 span { color: var(--ink-tertiary); }
+      .notfound__body { margin-bottom: var(--space-4); }
+      .notfound__ways { margin-top: var(--space-5); font: var(--type-meta); }
+      .notfound__ways ul { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+    </style>
+  </body>
+</html>

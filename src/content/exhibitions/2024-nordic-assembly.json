@@ -1,0 +1,8 @@
+{
+  "title": { "original": "Nordic Assembly", "lang": "en" },
+  "type": "group",
+  "venue": "malmo-konsthall-annex",
+  "dates": { "start": "2024-09-14", "end": "2024-12-01" },
+  "curators": ["nils-agger"],
+  "state": "public"
+}

@@ -1,0 +1,149 @@
+---
+import type { Locale } from '../lib/i18n'
+import { formatLength } from '../lib/format'
+
+/**
+ * The floor plan, as inline SVG.
+ *
+ * The single most under-used asset in artist documentation, and the one document that
+ * carries what photographs structurally cannot: circulation, negative space, viewing
+ * distance, and the relation of the work to the room. The Pinakothek der Moderne
+ * geodetically surveys its installations for exactly this reason — "once the
+ * installation artwork has been dismantled and stored away, it automatically loses its
+ * spatial context."
+ *
+ * Inline SVG rather than canvas or an image, deliberately: it is real DOM, so it is
+ * accessible, keyboard-reachable, theme-aware, zoomable, selectable and indexable. No
+ * core content on this site lives inside a canvas.
+ *
+ * ACCESSIBILITY: the plan is a <figure> with a text alternative, and the camera markers
+ * are described in an ordered list beneath it — the NON-SPATIAL EQUIVALENT of the
+ * drawing, not a fallback for it. A screen-reader user gets the same information in the
+ * same order. Markers are not `role="img"` children (which would make them
+ * presentational) and not a `role="radiogroup"` (which would hijack arrow keys and make
+ * Space a toggle); they are plain graphics with the list carrying the semantics.
+ */
+
+interface Props {
+  space: {
+    roomWidthM?: number
+    roomDepthM?: number
+    ceilingHeightM?: number
+    plan?: {
+      vertices: [number, number][]
+      doorAt?: [number, number]
+      workFootprint?: [number, number][]
+      cameras?: { sequence: number; at: [number, number]; bearingDeg?: number }[]
+    }
+  }
+  locale: Locale
+  viewpointCount?: number
+}
+
+const { space, locale } = Astro.props
+const plan = space.plan
+
+// No measured room, no drawing. The instrument is absent rather than empty — a page
+// that advertises what the artist failed to keep is worse than one that stays quiet.
+const drawable = !!(plan && space.roomWidthM && space.roomDepthM)
+
+const W = space.roomWidthM ?? 0
+const D = space.roomDepthM ?? 0
+const pad = Math.max(W, D) * 0.06
+const cameras = plan?.cameras ?? []
+
+const label = locale === 'da'
+  ? `Plantegning: rummet er ${formatLength(W, locale)} bredt og ${formatLength(D, locale)} dybt${space.ceilingHeightM ? `, med ${formatLength(space.ceilingHeightM, locale)} til loftet` : ''}.`
+  : `Floor plan: the room is ${formatLength(W, locale)} wide and ${formatLength(D, locale)} deep${space.ceilingHeightM ? `, with a ceiling at ${formatLength(space.ceilingHeightM, locale)}` : ''}.`
+
+/** Where a camera stands, described in words rather than coordinates. */
+function describe(cam: { at: [number, number] }): string {
+  const [x, y] = cam.at
+  const h = x < W / 3 ? (locale === 'da' ? 'vestlige' : 'west') : x > (2 * W) / 3 ? (locale === 'da' ? 'østlige' : 'east') : (locale === 'da' ? 'midterste' : 'centre')
+  const v = y < D / 3 ? (locale === 'da' ? 'nordlige' : 'north') : y > (2 * D) / 3 ? (locale === 'da' ? 'sydlige' : 'south') : (locale === 'da' ? 'midterste' : 'middle')
+  return locale === 'da' ? `fra den ${v} ${h} del af rummet` : `from the ${v} ${h} of the room`
+}
+---
+
+{drawable ? (
+  <figure class="plan">
+    <svg
+      viewBox={`${-pad} ${-pad} ${W + pad * 2} ${D + pad * 2}`}
+      width="320"
+      height={Math.round((320 * (D + pad * 2)) / (W + pad * 2))}
+      role="img"
+      aria-label={label}
+    >
+      {/* The room */}
+      <polygon
+        points={plan!.vertices.map(([x, y]) => `${x},${y}`).join(' ')}
+        class="plan__room"
+        vector-effect="non-scaling-stroke"
+      />
+
+      {/* The work's footprint — constant across every showing of the same work, which
+          is the whole point of drawing these to one shared scale. */}
+      {plan!.workFootprint ? (
+        <polygon points={plan!.workFootprint.map(([x, y]) => `${x},${y}`).join(' ')} class="plan__work" />
+      ) : null}
+
+      {/* The door: where a visitor enters, which determines what they see first. */}
+      {plan!.doorAt ? (
+        <circle cx={plan!.doorAt[0]} cy={plan!.doorAt[1]} r={Math.max(W, D) * 0.022} class="plan__door" vector-effect="non-scaling-stroke" />
+      ) : null}
+
+      {/* Camera positions, numbered to match the documentation order below. */}
+      {cameras.map((c) => (
+        <g class="plan__cam">
+          <circle cx={c.at[0]} cy={c.at[1]} r={Math.max(W, D) * 0.026} vector-effect="non-scaling-stroke" />
+          <text x={c.at[0]} y={c.at[1]} dy="0.35em" font-size={Math.max(W, D) * 0.045}>{c.sequence}</text>
+        </g>
+      ))}
+    </svg>
+
+    <figcaption>
+      <p class="plan__scale">
+        {formatLength(W, locale)} × {formatLength(D, locale)}
+        {space.ceilingHeightM ? ` · ${locale === 'da' ? 'loft' : 'ceiling'} ${formatLength(space.ceilingHeightM, locale)}` : ''}
+      </p>
+      {cameras.length > 0 ? (
+        <ol class="plan__cams">
+          {cameras.map((c) => (
+            <li>
+              <a href={`#view-${c.sequence}`}>
+                {locale === 'da' ? `Standpunkt ${c.sequence}` : `Viewpoint ${c.sequence}`}
+                <span class="plan__where"> — {describe(c)}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+    </figcaption>
+  </figure>
+) : null}
+
+<style>
+  .plan { margin: 0; flex: 0 0 auto; }
+
+  .plan svg { display: block; max-width: 100%; height: auto; color: var(--ink-tertiary); }
+
+  .plan__room { fill: none; stroke: var(--rule-strong); stroke-width: 1.25; }
+  /* The work, in the one functional accent. Never the sole carrier of meaning — the
+     dimensions are stated in text beside the drawing. */
+  .plan__work { fill: var(--accent); fill-opacity: 0.8; stroke: none; }
+  .plan__door { fill: var(--ground-page); stroke: var(--rule-strong); stroke-width: 1.25; }
+
+  .plan__cam circle { fill: var(--ground-page); stroke: var(--ink-secondary); stroke-width: 1; }
+  .plan__cam text { fill: var(--ink-secondary); text-anchor: middle; font-family: var(--font-meta); }
+
+  .plan figcaption { margin-top: var(--space-3); font: var(--type-meta); color: var(--ink-tertiary); }
+  .plan__scale { margin-bottom: var(--space-2); }
+  .plan__cams { display: grid; gap: var(--space-1); }
+  .plan__cams a { min-height: 24px; display: inline-block; }
+  .plan__where { color: var(--ink-tertiary); }
+
+  @media (forced-colors: active) {
+    .plan__work { fill: Highlight; }
+    .plan__room, .plan__door { stroke: CanvasText; }
+  }
+</style>

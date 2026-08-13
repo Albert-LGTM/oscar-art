@@ -1,0 +1,164 @@
+/*
+ * Design tokens.
+ *
+ * TWO DECLARED GROUNDS, and the difference between them is the whole colour argument:
+ *
+ *   --ground-page   A warm reading ground. Text on pure white at archive length is
+ *                   fatiguing, and a slight warmth reads as paper rather than as UI.
+ *
+ *   --ground-plate  CHROMA EXACTLY 0.000, in both themes, behind every artwork.
+ *                   Not "nearly neutral" and not "a very slight warm grey". A tinted
+ *                   surround measurably shifts the perceived colour of the image on it
+ *                   (simultaneous contrast), and the conservation literature is explicit
+ *                   that the photograph has ALREADY lost the room's light once. A
+ *                   site-level tint loses it twice, compounding a documented loss.
+ *
+ * oklch() is used specifically because chroma is an explicit channel: `oklch(L 0 H)` is
+ * provably achromatic by construction, where a hex value is only neutral if someone
+ * checked. The guarantee is legible in the source.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ── Grounds ─────────────────────────────────────────────────────────────── */
+  --ground-page: oklch(97.2% 0.006 85);      /* warm bone — reading surfaces only */
+  --ground-plate: oklch(93% 0 0);            /* chroma 0 — behind artwork, always */
+  --ground-plate-mid: oklch(72% 0 0);
+  --ground-plate-dark: oklch(38% 0 0);
+  --ground-inspect: oklch(50% 0 0);          /* ISO-3664-adjacent neutral for inspection */
+
+  /* ── Ink ─────────────────────────────────────────────────────────────────── */
+  --ink-primary: oklch(18% 0.004 85);
+  --ink-secondary: oklch(38% 0.004 85);
+  --ink-tertiary: oklch(53% 0.004 85);       /* >= 4.5:1 on --ground-page */
+  --rule: oklch(82% 0.004 85);
+  --rule-strong: oklch(55% 0.004 85);
+
+  /* ── Function ────────────────────────────────────────────────────────────── */
+  /* One functional accent, used for state and for the record's own annotations.
+     Never decorative, and never the sole carrier of meaning. */
+  --accent: oklch(48% 0.16 28);
+  --focus: oklch(45% 0.19 255);
+
+  /* ── Plate ───────────────────────────────────────────────────────────────── */
+  /* The mat: a physical margin between the artwork and everything else. Generous
+     enough to isolate the image from the page ground rather than merely separate it. */
+  --plate-mat: clamp(1rem, 3vw, 2.75rem);
+
+  /* ── Space ───────────────────────────────────────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1.25rem;
+  --space-5: 2rem;
+  --space-6: 3.25rem;
+  --space-7: 5.25rem;
+
+  /* ── Type ────────────────────────────────────────────────────────────────── */
+  /*
+   * System stacks until the licensed faces are chosen in Phase 0. Deliberately not a
+   * placeholder webfont: shipping a face we intend to replace would bake in metrics
+   * that the real face will not match, and the CLS work would have to be redone.
+   *
+   * DANISH DIACRITIC COVERAGE (æ ø å, and Å-with-ring at display sizes) IS A SELECTION
+   * GATE for the real faces, verified before licensing — not a check afterwards.
+   */
+  --font-text: Georgia, 'Times New Roman', serif;
+  --font-meta: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  --type-display: 400 clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem) / 1.15 var(--font-text);
+  --type-title: 400 clamp(1.25rem, 1.05rem + 0.9vw, 1.7rem) / 1.25 var(--font-text);
+  --type-body: 400 1.0625rem / 1.6 var(--font-text);
+  --type-caption: 400 0.9375rem / 1.5 var(--font-text);
+  --type-meta: 400 0.8125rem / 1.45 var(--font-meta);
+  --type-meta-strong: 500 0.8125rem / 1.45 var(--font-meta);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────── */
+  /* Two eases, no others. A hard 600 ms ceiling, enforced in review. */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  --dur-instant: 0ms;    /* filter changes — never animated */
+  --dur-hover: 120ms;
+  --dur-swap: 220ms;     /* viewpoint traversal */
+  --dur-route: 240ms;
+  --dur-entrance: 400ms; /* home arrival, once */
+
+  --measure: 68ch;
+}
+
+/* Dark theme. The plate ground stays chroma 0 — the neutrality guarantee is not a
+   light-mode-only courtesy. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ground-page: oklch(18% 0.005 85);
+    --ground-plate: oklch(22% 0 0);
+    --ground-plate-mid: oklch(38% 0 0);
+    --ground-plate-dark: oklch(14% 0 0);
+    --ground-inspect: oklch(50% 0 0);
+
+    --ink-primary: oklch(93% 0.003 85);
+    --ink-secondary: oklch(76% 0.003 85);
+    --ink-tertiary: oklch(62% 0.003 85);
+    --rule: oklch(34% 0.003 85);
+    --rule-strong: oklch(58% 0.003 85);
+
+    --accent: oklch(70% 0.15 30);
+    --focus: oklch(72% 0.16 245);
+  }
+}
+
+:root[data-theme='dark'] {
+  --ground-page: oklch(18% 0.005 85);
+  --ground-plate: oklch(22% 0 0);
+  --ground-plate-mid: oklch(38% 0 0);
+  --ground-plate-dark: oklch(14% 0 0);
+  --ground-inspect: oklch(50% 0 0);
+
+  --ink-primary: oklch(93% 0.003 85);
+  --ink-secondary: oklch(76% 0.003 85);
+  --ink-tertiary: oklch(62% 0.003 85);
+  --rule: oklch(34% 0.003 85);
+  --rule-strong: oklch(58% 0.003 85);
+
+  --accent: oklch(70% 0.15 30);
+  --focus: oklch(72% 0.16 245);
+}
+
+/*
+ * Reduced motion.
+ *
+ * Enforced here as a global kill switch, AND at component level, AND through a single
+ * reactive matchMedia in the traversal island. Three layers, because CSS-only reduced
+ * motion is a lie the moment anything animates in JavaScript — and grep confirms
+ * `prefers-reduced-motion` appears ZERO times in the CSS and JS of four of the five
+ * award-winning reference sites.
+ *
+ * Note this removes motion but never information: the viewpoint traversal GAINS a
+ * numbered polyline across the plan under reduced motion, restoring what the movement
+ * was carrying. See ViewpointTraversal.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-hover: 0ms;
+    --dur-swap: 0ms;
+    --dur-route: 0ms;
+    --dur-entrance: 0ms;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Forced colors: the accent and the rules must survive without colour, so state that
+   depends on them is doubled by a dash pattern or a glyph elsewhere in the components. */
+@media (forced-colors: active) {
+  :root {
+    --rule: CanvasText;
+    --focus: Highlight;
+  }
+}

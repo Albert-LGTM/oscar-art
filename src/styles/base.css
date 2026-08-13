@@ -1,0 +1,112 @@
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  /* 2.4.11 Focus Not Obscured (Minimum) — a sticky running head must never cover the
+     element that just received focus. This is the fix, and it is one line. */
+  scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground-page);
+  color: var(--ink-primary);
+  font: var(--type-body);
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 400; text-wrap: balance; }
+p { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+img { max-width: 100%; }
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Skip link. Johan Bech Jespersen's site destroys its theme's skip link with
+   `.page-header { display: none }`, leaving a 17,844 px document with no bypass
+   mechanism — so this one is authored rather than inherited. */
+.skip {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-4);
+  z-index: 100;
+  padding: 0.6em 1em;
+  background: var(--ground-page);
+  border: 1px solid var(--rule-strong);
+  transform: translateY(-200%);
+  transition: transform var(--dur-hover) var(--ease-out);
+}
+.skip:focus { transform: translateY(0); }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.shell {
+  max-width: 84rem;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+}
+
+.measure { max-width: var(--measure); }
+
+/*
+ * The dagger: the scholarly siglum for a work no longer extant. NEVER the sole
+ * indicator — it is wrapped in <abbr> with a title, and the spelled-out status always
+ * appears in the record's apparatus, so it survives forced-colors, screen readers,
+ * monochrome print and a reader who has never seen the convention.
+ */
+.dagger {
+  text-decoration: none;
+  border: 0;
+  color: var(--accent);
+  margin-inline-start: 0.15em;
+}
+
+/* Language fallback marker. Rendered wherever a translated field fell back — silence
+   would let a visitor see an emptier archive in one language with no explanation. */
+.fallback-note {
+  font: var(--type-meta);
+  color: var(--ink-tertiary);
+  font-style: normal;
+}
+
+/*
+ * Print. One stylesheet, no modes. Every record route prints as a one-page
+ * installation dossier, because the artefact that actually circulates inside an
+ * institution is a PDF — and if the artist does not author it, someone screenshots
+ * the site badly and circulates that instead.
+ */
+@media print {
+  :root {
+    --ground-page: #fff;
+    --ground-plate: #fff;
+    --ink-primary: #000;
+    --ink-secondary: #222;
+    --ink-tertiary: #444;
+    --rule: #999;
+  }
+  .skip, .caption__copy, nav[data-print-hide] { display: none !important; }
+  a { text-decoration: none; }
+  /* Resolve link targets in print, so a printed dossier remains navigable. */
+  main a[href^='http']::after { content: ' <' attr(href) '>'; font-size: 0.85em; }
+  figure, .record__block { break-inside: avoid; }
+}

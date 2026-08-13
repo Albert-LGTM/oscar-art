@@ -1,0 +1,55 @@
+# Ståsted — Podman Compose.
+#
+#   podman-compose up site   # production image on http://localhost:8080
+#   podman-compose up dev    # hot-reload dev server on http://localhost:4321
+#
+# Plain `podman` commands are in README.md if you would rather not install compose.
+
+services:
+  site:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/staasted:latest
+    ports:
+      - "8080:8080"
+    read_only: true
+    tmpfs:
+      # Caddy's own state. auto_https is off, so there is nothing durable to keep.
+      - /tmp
+    cap_drop:
+      # The image strips cap_net_bind_service from the Caddy binary (see Containerfile)
+      # because we bind :8080. Without that, dropping ALL makes exec fail outright with
+      # "Operation not permitted", which reads like a broken image rather than a policy
+      # conflict — the bounding set cannot satisfy the binary's file capabilities.
+      - ALL
+    security_opt:
+      - no-new-privileges
+    healthcheck:
+      # A real request, not `caddy version`. A process that is up but serving nothing
+      # is the failure worth catching.
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/en/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  dev:
+    build:
+      context: .
+      dockerfile: Containerfile.dev
+    image: localhost/staasted-dev:latest
+    ports:
+      - "4321:4321"
+    volumes:
+      # Source is bind-mounted so edits are live. :Z relabels for SELinux, which is
+      # enforcing on Fedora — without it the container gets permission denied on files
+      # that look perfectly readable from the host.
+      - ./src:/app/src:Z
+      - ./public:/app/public:Z
+      - ./astro.config.mjs:/app/astro.config.mjs:Z
+      - ./scripts:/app/scripts:Z
+      # node_modules stays in the image: the host has no compiled sharp for this
+      # container's libc, and an anonymous volume keeps the bind mount from shadowing it.
+      - /app/node_modules

@@ -1,0 +1,223 @@
+---
+import Base from '../../../../layouts/Base.astro'
+import Plate from '../../../../components/Plate.astro'
+import Caption from '../../../../components/Caption.astro'
+import FloorPlan from '../../../../components/FloorPlan.astro'
+import { LOCALES, type Locale, resolveTranslated, title as titleOf } from '../../../../lib/i18n'
+import { routes, segment } from '../../../../lib/routes'
+import { getWorkRecords, nameResolver, type WorkRecord, type ShowingRecord } from '../../../../lib/query'
+import { formatDateRange, formatDimensions, formatArea, formatLength } from '../../../../lib/format'
+import {
+  IMAGE_ROLE_LABEL, LIGHT_CONDITION_LABEL, SHOWING_KIND_LABEL,
+  WORK_DEPICTING_ROLES, IMAGE_ROLES,
+} from '../../../../lib/schema/vocab'
+import { ui, t } from '../../../../lib/site'
+
+/**
+ * Showing record — the atomic unit of the archive.
+ *
+ * work × venue × exhibition × dates. This is where photographs, floor plan, press and
+ * as-installed measurements live, and it is the route the whole URL grammar exists to
+ * make citable: a curator must be able to send a colleague a link to ONE installation
+ * view of ONE work at ONE venue, and cite it in a footnote.
+ *
+ * Documentation is ordered by ROLE, then by the artist's declared sequence — never
+ * shuffled and never randomised. The fixed-perspective problem the conservation
+ * literature identifies is answered by ordered traversal, not by variety.
+ */
+export async function getStaticPaths() {
+  const records = await getWorkRecords()
+  return LOCALES.flatMap((locale) =>
+    records.flatMap((record) =>
+      record.showings.map((showing) => ({
+        params: {
+          locale,
+          section: segment('works', locale),
+          slug: record.entry.id,
+          showing: showing.entry.data.slug,
+        },
+        props: { record, showing },
+      })),
+    ),
+  )
+}
+
+interface Props { record: WorkRecord; showing: ShowingRecord }
+
+const locale = Astro.params.locale as Locale
+const { record, showing } = Astro.props
+const w = record.entry.data
+const s = showing.entry.data
+const resolveName = await nameResolver()
+
+const workTitle = titleOf(w.title)
+const venueName = titleOf(showing.venue.data.name)
+
+const images = s.assets.filter((a): a is Extract<typeof a, { kind: 'image' }> => a.kind === 'image')
+const roleRank = new Map(IMAGE_ROLES.map((r, i) => [r, i]))
+const ordered = [...images].sort((a, b) => {
+  const byRole = (roleRank.get(a.role) ?? 99) - (roleRank.get(b.role) ?? 99)
+  return byRole !== 0 ? byRole : (a.sequence ?? 99) - (b.sequence ?? 99)
+})
+const viewpoints = ordered.filter((i) => WORK_DEPICTING_ROLES.includes(i.role))
+
+const notRecorded = resolveTranslated(s.notRecorded, locale)
+const note = resolveTranslated(s.note, locale)
+const asInstalled = s.asInstalledDimensions ? formatDimensions(s.asInstalledDimensions, locale) : null
+
+const captionFor = (img: (typeof ordered)[number]) => ({
+  title: w.title, year: w.year, yearEnd: w.yearEnd,
+  materials: w.materials, aiUse: w.aiUse,
+  dimensions: s.asInstalledDimensions ?? w.dimensions,
+  role: img.role,
+  venueName, city: showing.venue.data.city,
+  dates: s.dates, credit: img.credit, resolveName,
+})
+
+const otherShowings = record.showings.filter((o) => o.entry.data.slug !== s.slug)
+---
+
+<Base
+  locale={locale}
+  title={`${workTitle} — ${venueName}, ${s.dates.start.slice(0, 4)}`}
+  description={resolveTranslated(w.statementOfSignificance, locale).value ?? undefined}
+>
+  <article class="shell showing">
+    <header class="showing__head">
+      <p class="showing__parent">
+        <a href={routes.work(record.entry.id, locale)}>
+          <cite lang={w.title.lang}>{workTitle}</cite>
+          {record.isLost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
+        </a>
+      </p>
+      <h1>{venueName}, {showing.venue.data.city}</h1>
+      <p class="showing__dates">
+        {formatDateRange(s.dates, locale)}
+        {s.kind !== 'first-realisation' ? <> · {t(SHOWING_KIND_LABEL[s.kind], locale)}</> : null}
+        {showing.exhibition ? <> · <cite lang={showing.exhibition.data.title.lang}>{titleOf(showing.exhibition.data.title)}</cite></> : null}
+      </p>
+    </header>
+
+    {/* ── The room, as drawn ──────────────────────────────────────────────── */}
+    {s.space ? (
+      <section class="showing__block" aria-labelledby="space-h">
+        <h2 id="space-h">{t(ui.asInstalled, locale)}</h2>
+        <div class="showing__space">
+          {/* Renders only when the room was measured. An empty instrument is absent,
+              never a placeholder. */}
+          <FloorPlan space={s.space} locale={locale} viewpointCount={viewpoints.length} />
+          <dl class="spec">
+            {s.space.roomWidthM && s.space.roomDepthM ? (
+              <><dt>{locale === 'da' ? 'Rum' : 'Room'}</dt>
+              <dd>{formatLength(s.space.roomWidthM, locale)} × {formatLength(s.space.roomDepthM, locale)}
+                {s.space.floorAreaM2 ? ` (${formatArea(s.space.floorAreaM2, locale)})` : ''}</dd></>
+            ) : null}
+            {s.space.ceilingHeightM ? (<><dt>{locale === 'da' ? 'Lofthøjde' : 'Ceiling'}</dt><dd>{formatLength(s.space.ceilingHeightM, locale)}</dd></>) : null}
+            {asInstalled ? (<><dt>{locale === 'da' ? 'Værkets mål her' : 'As installed'}</dt><dd>{asInstalled}</dd></>) : null}
+            {s.space.light ? (<><dt>{locale === 'da' ? 'Lys' : 'Light'}</dt><dd>{t(LIGHT_CONDITION_LABEL[s.space.light], locale)}</dd></>) : null}
+            {s.space.wallSurface ? (<><dt>{locale === 'da' ? 'Vægge' : 'Walls'}</dt><dd>{resolveTranslated(s.space.wallSurface, locale).value}</dd></>) : null}
+            {s.space.floorSurface ? (<><dt>{locale === 'da' ? 'Gulv' : 'Floor'}</dt><dd>{resolveTranslated(s.space.floorSurface, locale).value}</dd></>) : null}
+            {s.space.dedicatedSpace !== undefined ? (
+              <><dt>{locale === 'da' ? 'Rummet' : 'Space'}</dt>
+              <dd>{s.space.dedicatedSpace
+                ? (locale === 'da' ? 'Eget rum' : 'Dedicated to this work')
+                : (locale === 'da' ? 'Delt med andre værker' : 'Shared with other works')}</dd></>
+            ) : null}
+          </dl>
+        </div>
+        {note.value ? <p class="showing__note measure">{note.value}</p> : null}
+      </section>
+    ) : null}
+
+    {/* ── The documentation ───────────────────────────────────────────────── */}
+    <section class="showing__plates" aria-labelledby="doc-h">
+      <h2 id="doc-h" class="sr-only">{locale === 'da' ? 'Dokumentation' : 'Documentation'}</h2>
+      {ordered.map((img, i) => {
+        const n = viewpoints.indexOf(img)
+        return (
+          <div class="showing__plate" id={n >= 0 ? `view-${n + 1}` : undefined}>
+            <p class="showing__role">
+              {t(IMAGE_ROLE_LABEL[img.role], locale)}
+              {n >= 0 && viewpoints.length > 1 ? <> · {ui.viewpoint[locale](n + 1, viewpoints.length)}</> : null}
+            </p>
+            <Plate asset={img} locale={locale} sizes="(min-width: 60rem) 76vw, 100vw" priority={i === 0} />
+            <Caption
+              locale={locale}
+              caption={captionFor(img)}
+              declareColour={{ profile: img.file.colourProfile, width: img.file.width, height: img.file.height, href: img.file.src }}
+            />
+          </div>
+        )
+      })}
+    </section>
+
+    {/*
+      What the documentation cannot carry, stated rather than simulated.
+      The conservation literature is explicit that photographs lose light, scale, sound
+      and duration. Naming the loss is more honest — and more affecting — than trying to
+      compensate for it with an effect.
+    */}
+    {notRecorded.value ? (
+      <section class="showing__block" aria-labelledby="notrec-h">
+        <h2 id="notrec-h">{t(ui.notRecorded, locale)}</h2>
+        <p class="showing__note measure">{notRecorded.value}</p>
+      </section>
+    ) : null}
+
+    {/* ── The same work, other rooms ──────────────────────────────────────── */}
+    {otherShowings.length > 0 ? (
+      <nav class="showing__block" aria-labelledby="other-h">
+        <h2 id="other-h">{locale === 'da' ? 'Samme værk, andre rum' : 'The same work, other rooms'}</h2>
+        <ul class="showing__others">
+          {otherShowings.map((o) => (
+            <li>
+              <a href={routes.showing(record.entry.id, o.entry.data.slug, locale)}>
+                {titleOf(o.venue.data.name)}, {o.venue.data.city}
+                <span class="showing__othermeta">{formatDateRange(o.entry.data.dates, locale)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    ) : null}
+
+    {s.lastReviewedOn ? (
+      <p class="showing__reviewed">
+        {locale === 'da' ? 'Posten er sidst gennemgået' : 'Record last reviewed'} {s.lastReviewedOn}
+      </p>
+    ) : null}
+  </article>
+</Base>
+
+<style>
+  .showing { padding-top: var(--space-6); }
+  .showing__head { margin-bottom: var(--space-6); }
+  .showing__parent { font: var(--type-meta); margin-bottom: var(--space-2); }
+  .showing__parent cite { font-style: italic; }
+  .showing__head h1 { font: var(--type-display); }
+  .showing__dates { font: var(--type-caption); color: var(--ink-secondary); margin-top: var(--space-2); }
+  .showing__dates cite { font-style: italic; }
+
+  .showing__block { margin: var(--space-7) 0; }
+  .showing__block h2 { font: var(--type-meta-strong); text-transform: uppercase; letter-spacing: 0.06em; }
+  .showing__space { display: flex; flex-wrap: wrap; gap: var(--space-5); margin-top: var(--space-4); align-items: flex-start; }
+  .showing__note { font: var(--type-caption); color: var(--ink-secondary); margin-top: var(--space-4); }
+  .showing__reviewed { font: var(--type-meta); color: var(--ink-tertiary); margin-top: var(--space-6); }
+
+  .spec { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: var(--space-2) var(--space-4); font: var(--type-caption); flex: 1 1 20rem; }
+  .spec dt { font: var(--type-meta); color: var(--ink-tertiary); }
+  .spec dd { margin: 0; }
+
+  .showing__plates { display: grid; gap: var(--space-7); margin: var(--space-6) 0; }
+  .showing__plate { display: grid; gap: var(--space-3); scroll-margin-top: 5rem; }
+  .showing__role { font: var(--type-meta); color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .showing__others { display: grid; gap: var(--space-2); margin-top: var(--space-3); }
+  .showing__others a { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: baseline; min-height: 24px; }
+  .showing__othermeta { font: var(--type-meta); color: var(--ink-tertiary); }
+
+  @media (max-width: 48rem) {
+    .spec { grid-template-columns: 1fr; gap: var(--space-1) 0; }
+    .spec dd { margin-bottom: var(--space-3); }
+  }
+</style>

@@ -1,0 +1,293 @@
+---
+import Base from '../../../layouts/Base.astro'
+import { LOCALES, type Locale, resolveTranslated, title as titleOf, gloss } from '../../../lib/i18n'
+import { routes, segment } from '../../../lib/routes'
+import { getWorkRecords, type WorkRecord } from '../../../lib/query'
+import { formatDateRange, formatDimensions, formatArea, formatLength } from '../../../lib/format'
+import { EXISTENCE_STATUS_LABEL, LIGHT_CONDITION_LABEL, SHOWING_KIND_LABEL } from '../../../lib/schema/vocab'
+import { ui, t } from '../../../lib/site'
+
+/**
+ * Work record — the identity spine.
+ *
+ * Three depths, ALL server-rendered and present in the DOM:
+ *   1. Caption      (5 s)   — the CAA identification line, always visible.
+ *   2. Statement    (30 s)  — 80–150 words, the field's own instrument.
+ *   3. Dossier      (10 m+) — <details>, collapsed but INDEXED, opened by fragment.
+ *
+ * Collapsed is not hidden: the content is in the DOM, findable by in-page search,
+ * crawlable and printable. That distinction is what lets depth be available without
+ * being imposed.
+ */
+export async function getStaticPaths() {
+  const records = await getWorkRecords()
+  return LOCALES.flatMap((locale) =>
+    records.map((record) => ({
+      params: { locale, section: segment('works', locale), slug: record.entry.id },
+      props: { record },
+    })),
+  )
+}
+
+interface Props { record: WorkRecord }
+
+const locale = Astro.params.locale as Locale
+const { record } = Astro.props
+const w = record.entry.data
+
+const workTitle = titleOf(w.title)
+const workGloss = gloss(w.title, locale)
+
+const statement = resolveTranslated(w.statementOfSignificance, locale)
+const variability = resolveTranslated(w.variability, locale)
+const existenceNote = resolveTranslated(w.existenceNote, locale)
+const materials = resolveTranslated(w.materials, locale)
+const dims = formatDimensions(w.dimensions, locale)
+
+/**
+ * The ledger's shared scale.
+ *
+ * One metres-per-pixel constant across EVERY room, so two showings are directly
+ * comparable at a glance — that comparability is the entire argument. A per-room scale
+ * would make every room look the same size, which is precisely the information the
+ * instrument exists to carry.
+ */
+const roomed = record.showings.filter((s) => s.entry.data.space?.roomWidthM && s.entry.data.space?.roomDepthM)
+const maxSpan = Math.max(1, ...roomed.map((s) => Math.max(s.entry.data.space!.roomWidthM!, s.entry.data.space!.roomDepthM!)))
+const PX_PER_M = 92 / maxSpan
+---
+
+<Base
+  locale={locale}
+  title={`${workTitle}, ${w.year}`}
+  description={statement.value ?? materials.value ?? undefined}
+>
+  <article class="shell record">
+    <header class="record__head">
+      <h1>
+        <cite lang={w.title.lang}>{workTitle}</cite>
+        {record.isLost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
+        <span class="record__year">{w.year}</span>
+      </h1>
+      {workGloss ? <p class="record__gloss" lang={locale}>{workGloss}</p> : null}
+
+      {/* The existence sentence, in the artist's own voice. ~40 bytes of markup, and
+          the single most affecting element available without adding an effect. */}
+      {existenceNote.value ? (
+        <p class="record__existence">
+          {existenceNote.value}
+          {existenceNote.status === 'fallback' ? (
+            <span class="fallback-note"> — {t(ui.fallbackNotice, locale)}</span>
+          ) : null}
+        </p>
+      ) : null}
+    </header>
+
+    {/* ── Depth 1: the identification line ─────────────────────────────────── */}
+    <section class="record__block" aria-labelledby="spec-h">
+      <h2 id="spec-h">{t(ui.specification, locale)}</h2>
+      <dl class="spec">
+        {materials.value ? (<><dt>{locale === 'da' ? 'Materialer' : 'Materials'}</dt><dd>{materials.value}</dd></>) : null}
+        {dims ? (<><dt>{locale === 'da' ? 'Mål' : 'Dimensions'}</dt><dd>{dims}</dd></>) : null}
+        <dt>{locale === 'da' ? 'Status' : 'Existence'}</dt>
+        <dd>
+          {t(EXISTENCE_STATUS_LABEL[w.existenceStatus], locale)}
+          {/* The status carries its source. Without one, a dismantled-and-stored work
+              can be quietly recorded as destroyed and the archive becomes a mood. */}
+          {w.existenceSource ? <span class="spec__source"> — {w.existenceSource}</span> : null}
+        </dd>
+        {w.components.length > 0 ? (
+          <>
+            <dt>{locale === 'da' ? 'Elementer' : 'Components'}</dt>
+            <dd><ul class="spec__list">{w.components.map((c) => <li>{resolveTranslated(c, locale).value}</li>)}</ul></dd>
+          </>
+        ) : null}
+      </dl>
+    </section>
+
+    {/* ── Depth 2: statement of significance ───────────────────────────────── */}
+    {statement.value ? (
+      <section class="record__block measure" aria-labelledby="stmt-h">
+        <h2 id="stmt-h">{t(ui.statement, locale)}</h2>
+        <p class="record__prose">{statement.value}</p>
+        {statement.status === 'fallback' ? <p class="fallback-note">{t(ui.fallbackNotice, locale)}</p> : null}
+      </section>
+    ) : null}
+
+    {/* ── The iteration ledger ─────────────────────────────────────────────── */}
+    <section class="record__block" aria-labelledby="showings-h">
+      <h2 id="showings-h">
+        {t(ui.showings, locale)}
+        <span class="record__count">{ui.showingsCount[locale](record.showings.length)}</span>
+      </h2>
+
+      {roomed.length > 0 ? (
+        <p class="ledger__note">
+          {locale === 'da'
+            ? 'Rummene er tegnet i samme målestok. Værkets fodaftryk er markeret.'
+            : 'Rooms drawn to one shared scale. The work’s footprint is marked.'}
+        </p>
+      ) : null}
+
+      <ol class="ledger">
+        {record.showings.map((s) => {
+          const sp = s.entry.data.space
+          const hasPlan = !!(sp?.roomWidthM && sp?.roomDepthM)
+          const venueName = titleOf(s.venue.data.name)
+          return (
+            <li class="ledger__item">
+              <a href={routes.showing(record.entry.id, s.entry.data.slug, locale)}>
+                {/*
+                  The glyph renders ONLY when the room was measured. An empty instrument
+                  is absent, never a placeholder: a page that advertises what the artist
+                  failed to keep is worse than one that simply does not make the claim.
+                */}
+                {hasPlan ? (
+                  <svg
+                    class="ledger__plan"
+                    width={Math.round(sp!.roomWidthM! * PX_PER_M)}
+                    height={Math.round(sp!.roomDepthM! * PX_PER_M)}
+                    viewBox={`0 0 ${sp!.roomWidthM} ${sp!.roomDepthM}`}
+                    role="img"
+                    aria-label={locale === 'da'
+                      ? `Plan: ${formatLength(sp!.roomWidthM!, locale)} gange ${formatLength(sp!.roomDepthM!, locale)}`
+                      : `Plan: ${formatLength(sp!.roomWidthM!, locale)} by ${formatLength(sp!.roomDepthM!, locale)}`}
+                  >
+                    <rect x="0" y="0" width={sp!.roomWidthM} height={sp!.roomDepthM}
+                          class="ledger__room" vector-effect="non-scaling-stroke" />
+                    {sp!.plan?.workFootprint ? (
+                      <polygon points={sp!.plan.workFootprint.map(([x, y]) => `${x},${y}`).join(' ')}
+                               class="ledger__footprint" />
+                    ) : null}
+                  </svg>
+                ) : null}
+
+                <span class="ledger__meta">
+                  <span class="ledger__venue">{venueName}, {s.venue.data.city}</span>
+                  <span class="ledger__dates">{formatDateRange(s.entry.data.dates, locale)}</span>
+                  {hasPlan ? (
+                    <span class="ledger__dims">
+                      {formatLength(sp!.roomWidthM!, locale)} × {formatLength(sp!.roomDepthM!, locale)}
+                      {sp!.ceilingHeightM ? ` · ${locale === 'da' ? 'loft' : 'ceiling'} ${formatLength(sp!.ceilingHeightM, locale)}` : ''}
+                      {sp!.floorAreaM2 ? ` · ${formatArea(sp!.floorAreaM2, locale)}` : ''}
+                    </span>
+                  ) : null}
+                  {s.entry.data.kind !== 'first-realisation' ? (
+                    <span class="ledger__kind">{t(SHOWING_KIND_LABEL[s.entry.data.kind], locale)}</span>
+                  ) : null}
+                </span>
+              </a>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+
+    {/* ── Depth 3: the dossier ─────────────────────────────────────────────── */}
+    <section class="record__block" aria-labelledby="dossier-h">
+      <h2 id="dossier-h" class="sr-only">{locale === 'da' ? 'Uddybende oplysninger' : 'Further detail'}</h2>
+
+      {variability.value ? (
+        <details id="variability">
+          <summary>{locale === 'da' ? 'Hvad varierer' : 'What varies'}</summary>
+          <p class="record__prose measure">{variability.value}</p>
+        </details>
+      ) : null}
+
+      {w.technical ? (
+        <details id="technical">
+          {/*
+            The question a curator actually arrives with — "can my room take this?" —
+            and the answer no artist website publishes. Collapsed so it never competes
+            with the work; present in the DOM so it is searchable and indexed.
+          */}
+          <summary>{t(ui.technical, locale)}</summary>
+          <dl class="spec">
+            {w.technical.minimumFloorAreaM2 ? (<><dt>{locale === 'da' ? 'Mindste gulvareal' : 'Minimum floor area'}</dt><dd>{formatArea(w.technical.minimumFloorAreaM2, locale)}</dd></>) : null}
+            {w.technical.minimumCeilingHeightM ? (<><dt>{locale === 'da' ? 'Mindste lofthøjde' : 'Minimum ceiling height'}</dt><dd>{formatLength(w.technical.minimumCeilingHeightM, locale)}</dd></>) : null}
+            {w.technical.light ? (<><dt>{locale === 'da' ? 'Lys' : 'Light'}</dt><dd>{t(LIGHT_CONDITION_LABEL[w.technical.light], locale)}</dd></>) : null}
+            {w.technical.powerDrawW ? (<><dt>{locale === 'da' ? 'Effektforbrug' : 'Power draw'}</dt><dd>{w.technical.powerDrawW} W{w.technical.dedicatedCircuits ? ` · ${w.technical.dedicatedCircuits} ${locale === 'da' ? 'separate kredse' : 'dedicated circuits'}` : ''}</dd></>) : null}
+            {w.technical.installCrewSize ? (<><dt>{locale === 'da' ? 'Opbygning' : 'Install'}</dt><dd>{w.technical.installCrewSize} {locale === 'da' ? 'personer' : 'crew'}{w.technical.installDays ? ` · ${w.technical.installDays} ${locale === 'da' ? 'dage' : 'days'}` : ''}</dd></>) : null}
+            {w.technical.equipmentRequiredFromVenue.length > 0 ? (
+              <>
+                <dt>{locale === 'da' ? 'Kræves af stedet' : 'Required from venue'}</dt>
+                <dd><ul class="spec__list">{w.technical.equipmentRequiredFromVenue.map((e) => <li>{resolveTranslated(e, locale).value}</li>)}</ul></dd>
+              </>
+            ) : null}
+          </dl>
+        </details>
+      ) : null}
+    </section>
+
+    <p class="record__reviewed">
+      {w.lastReviewedOn
+        ? `${locale === 'da' ? 'Posten er sidst gennemgået' : 'Record last reviewed'} ${w.lastReviewedOn}`
+        : ''}
+    </p>
+  </article>
+</Base>
+
+<style>
+  .record { padding-top: var(--space-6); }
+  .record__head { margin-bottom: var(--space-6); }
+  .record__head h1 { font: var(--type-display); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3); }
+  .record__head cite { font-style: italic; }
+  .record__year { font: var(--type-meta); color: var(--ink-tertiary); }
+  .record__gloss { font: var(--type-caption); color: var(--ink-tertiary); margin-top: var(--space-2); }
+  .record__existence { font: var(--type-title); color: var(--accent); margin-top: var(--space-4); max-width: var(--measure); }
+
+  .record__block { margin-bottom: var(--space-7); }
+  .record__block h2 { font: var(--type-meta-strong); text-transform: uppercase; letter-spacing: 0.06em; display: flex; gap: var(--space-3); align-items: baseline; }
+  .record__count { font: var(--type-meta); text-transform: none; letter-spacing: 0; color: var(--ink-tertiary); }
+  .record__prose { margin-top: var(--space-3); }
+  .record__reviewed { font: var(--type-meta); color: var(--ink-tertiary); margin-top: var(--space-6); }
+
+  .spec { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: var(--space-2) var(--space-4); margin-top: var(--space-3); font: var(--type-caption); }
+  .spec dt { font: var(--type-meta); color: var(--ink-tertiary); }
+  .spec dd { margin: 0; }
+  .spec__source { color: var(--ink-tertiary); font: var(--type-meta); }
+  .spec__list { display: grid; gap: var(--space-1); }
+
+  .ledger__note { font: var(--type-meta); color: var(--ink-tertiary); margin-top: var(--space-3); }
+  .ledger { margin-top: var(--space-4); display: grid; gap: var(--space-4); }
+  .ledger__item a {
+    display: flex; align-items: flex-end; gap: var(--space-4);
+    text-decoration: none; padding: var(--space-2) 0;
+  }
+  .ledger__item a:hover .ledger__venue { text-decoration: underline; }
+
+  .ledger__plan { flex: none; overflow: visible; }
+
+  /* The room reads FIRST: a solid 2px wall on a tinted floor. It is the thing that
+     changes between showings, so it must be the thing the eye lands on. */
+  .ledger__room {
+    fill: var(--ground-plate);
+    stroke: var(--ink-secondary);
+    stroke-width: 2;
+  }
+
+  /* The work reads SECOND: an outline, not a solid block. Identical in every glyph,
+     which is the point — a constant object crossing a changing set of rooms. Solid
+     saturated fill made it dominate and reduced the ledger to a row of red squares. */
+  .ledger__footprint {
+    fill: var(--accent);
+    fill-opacity: 0.16;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .ledger__meta { display: flex; flex-direction: column; gap: 0.15em; }
+  .ledger__venue { font: var(--type-body); }
+  .ledger__dates, .ledger__dims, .ledger__kind { font: var(--type-meta); color: var(--ink-tertiary); }
+
+  details { padding: var(--space-2) 0; }
+  summary { font: var(--type-meta-strong); cursor: pointer; min-height: 24px; }
+  summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  @media (max-width: 40rem) {
+    .spec { grid-template-columns: 1fr; gap: var(--space-1) 0; }
+    .spec dd { margin-bottom: var(--space-3); }
+    .ledger__item a { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+  }
+</style>

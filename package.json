@@ -1,0 +1,38 @@
+{
+  "name": "staasted",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "St\u00e5sted \u2014 archive of record for a contemporary installation artist (DA/EN)",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "seed:media": "node scripts/seed-media.mjs",
+    "build:media": "node scripts/build-derivatives.mjs",
+    "lint:plates": "node scripts/lint-plates.mjs",
+    "test:colour": "node scripts/assert-icc.mjs",
+    "verify": "npm run check && npm run lint:plates && npm run test:colour && npm run build && npm run lint:semantics && npm run lint:links && npm run gen:csp",
+    "lint:semantics": "node scripts/lint-semantics.mjs",
+    "gen:csp": "node scripts/gen-csp.mjs",
+    "smoke": "bash scripts/smoke.sh",
+    "lint:links": "node scripts/lint-links.mjs",
+    "build:cf": "npm run seed:media && npm run build:media && npm run build && npm run gen:csp"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^7.2.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "sharp": "0.35.3",
+    "typescript": "^5.9.3"
+  },
+  "pinnedDependencyNotes": {
+    "sharp": "Pinned EXACTLY, not ranged. sharp has silently broken colour handling at least twice (libvips #2862, #4008) and it is the only thing standing between the artwork and an sRGB conversion nobody notices on a developer monitor. Upgrading is a deliberate act, gated on `npm run test:colour` passing. 0.35.3 is also the floor for libvips CVE-2026-33327 / 33328 / 35590 / 35591."
+  }
+}

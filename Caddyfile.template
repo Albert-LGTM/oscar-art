@@ -1,0 +1,74 @@
+# Ståsted — static serving.
+#
+# Generated from Caddyfile.template by scripts/gen-csp.mjs. DO NOT EDIT Caddyfile
+# directly; edit this template. The CSP hashes come from what the build actually
+# emitted, so they cannot drift out of sync with the components.
+{
+	# TLS terminates upstream (reverse proxy / ingress / CDN). Inside the container we
+	# speak plain HTTP on an unprivileged port so the process can run as non-root.
+	auto_https off
+	admin off
+	persist_config off
+}
+
+:8080 {
+	root * /srv
+	encode zstd gzip
+
+	header {
+		Content-Security-Policy "{{CSP}}"
+
+		# The archive is meant to be cited and quoted, not framed or sniffed.
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+
+		# No feature this site uses needs any of these. An artist archive that can
+		# silently reach the microphone is a liability, not a capability.
+		Permissions-Policy "accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), microphone=(), midi=(), payment=(), usb=(), xr-spatial-tracking=()"
+
+		# Enable once the real domain is on HTTPS. Left commented deliberately: HSTS on
+		# a domain not yet fully on TLS locks visitors out, and it is not reversible
+		# within max-age.
+		# Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+		-Server
+	}
+
+	# Caching, as two MUTUALLY EXCLUSIVE matchers rather than a default plus an
+	# override. Stacked `header` directives that both set Cache-Control do not reliably
+	# override one another, and the failure is silent in the worst direction: every
+	# derivative quietly served with must-revalidate, which looks fine locally and
+	# throws away the entire image cache in production.
+	#
+	# Matched on the REQUEST path. This cannot be expressed as `*.html` on the other
+	# side — a directory-style URL like /en/works/vertical-hold/ contains no .html
+	# until try_files rewrites it, so an HTML-side matcher covers nothing at all.
+	@immutable path /_astro/* /media/derived/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	# Everything else revalidates. An archive of record that serves a stale correction
+	# is worse than one that serves it a little slower.
+	@revalidate not path /_astro/* /media/derived/*
+	header @revalidate Cache-Control "public, max-age=0, must-revalidate"
+
+	# Cloudflare Pages consumes these; Caddy has no reason to serve them.
+	@hostconfig path /_headers /_redirects
+	respond @hostconfig 404
+
+	# Directory-style URLs with trailing slashes (see astro.config.mjs). A work URL is
+	# a citation target, so it must resolve for the lifetime of the archive.
+	try_files {path} {path}/ {path}/index.html
+
+	file_server {
+		precompressed zstd br gzip
+	}
+
+	# A real 404 with the site's own chrome. Brady Perron and Matthew Pothier both
+	# return HTTP 200 for any path — a soft 404 that poisons indexing and tells a
+	# curator a mistyped URL is a real page.
+	handle_errors {
+		@404 expression {err.status_code} == 404
+		rewrite @404 /404.html
+		file_server
+	}
+}

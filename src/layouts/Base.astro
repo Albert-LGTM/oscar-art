@@ -1,0 +1,183 @@
+---
+import '../styles/base.css'
+import { type Locale, otherLocale } from '../lib/i18n'
+import { routes, translatePath, DOORS } from '../lib/routes'
+import { site, ui, t } from '../lib/site'
+
+interface Props {
+  locale: Locale
+  title: string
+  description?: string
+  /** Set on viewpoints >= 2, which are canonical to their showing. A sitemap omission
+   *  alone does NOT prevent indexing of internally-linked pages. */
+  canonical?: string
+  /** Suppresses the site name suffix where the page title is already the full identity. */
+  bareTitle?: boolean
+}
+
+const { locale, title, description, canonical, bareTitle = false } = Astro.props
+const other = otherLocale(locale)
+
+const path = Astro.url.pathname
+const canonicalUrl = new URL(canonical ?? path, Astro.site).href
+const alternateUrl = new URL(translatePath(path, other), Astro.site).href
+const selfUrl = new URL(path, Astro.site).href
+
+const documentTitle = bareTitle ? title : `${title} — ${site.artistName}`
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{documentTitle}</title>
+    {description ? <meta name="description" content={description} /> : null}
+
+    <link rel="canonical" href={canonicalUrl} />
+    {/* Reciprocal hreflang plus x-default. For a bilingual launch this is the single
+        most consequential SEO mechanic, and it must be reciprocal on BOTH pages or
+        search engines discard the pair entirely. */}
+    <link rel="alternate" hreflang={locale} href={selfUrl} />
+    <link rel="alternate" hreflang={other} href={alternateUrl} />
+    <link rel="alternate" hreflang="x-default" href={new URL(translatePath(path, 'en'), Astro.site).href} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={documentTitle} />
+    {description ? <meta property="og:description" content={description} /> : null}
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:locale" content={locale === 'da' ? 'da_DK' : 'en_GB'} />
+    <meta property="og:locale:alternate" content={other === 'da' ? 'da_DK' : 'en_GB'} />
+
+    <slot name="head" />
+  </head>
+
+  <body>
+    <a class="skip" href="#main">{t(ui.skipToContent, locale)}</a>
+
+    <header class="masthead">
+      <div class="shell masthead__inner">
+        <p class="masthead__identity">
+          <a href={routes.home(locale)}>{site.artistName}</a>
+        </p>
+
+        <nav class="masthead__nav" aria-label={locale === 'da' ? 'Hovedmenu' : 'Main'} data-print-hide>
+          <ul>
+            {DOORS.map((door) => (
+              <li><a href={routes.door(door, locale)}>{t(ui.doors[door], locale)}</a></li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Lands on the EQUIVALENT RECORD, never the homepage, and preserves any
+            filter state in the query string. */}
+        <a class="masthead__lang" href={translatePath(path, other, Astro.url.search)} lang={other} hreflang={other}>
+          {t(ui.langToggle, locale)}
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="colophon">
+      <div class="shell colophon__inner">
+        <p>
+          <a href={routes.press(locale)}>{t(ui.press, locale)}</a>
+          <a href={routes.about(locale)}>{t(ui.about, locale)}</a>
+          <a href={routes.archive(locale)}>{t(ui.archive, locale)}</a>
+        </p>
+        <p class="colophon__contact">
+          {site.contact.name} · <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  /* No rule under the masthead. Separation comes from space: the nav sits in its own
+     band of air and the page content starts well clear of it. A hairline here is the
+     most reflexive divider on the web and it does nothing a gap cannot. */
+  .masthead {
+    padding: var(--space-4) 0 var(--space-5);
+  }
+
+  .masthead__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-4) var(--space-5);
+  }
+
+  .masthead__identity {
+    font: var(--type-meta-strong);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-inline-end: auto;
+  }
+  .masthead__identity a { text-decoration: none; }
+
+  .masthead__nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  .masthead__nav a,
+  .masthead__lang {
+    font: var(--type-meta);
+    text-decoration: none;
+    /* 2.5.8 Target Size (Minimum): 24 × 24 CSS px at AA. */
+    display: inline-block;
+    min-height: 24px;
+    line-height: 24px;
+  }
+  .masthead__nav a:hover,
+  .masthead__lang:hover { text-decoration: underline; }
+
+  .colophon {
+    margin-top: var(--space-7);
+    padding: var(--space-5) 0 var(--space-6);
+    font: var(--type-meta);
+    color: var(--ink-secondary);
+  }
+  .colophon__inner { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-5); }
+  .colophon p { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+  .colophon__contact { margin-inline-start: auto; }
+
+  /*
+   * Mobile masthead: one line for identity, one scrolling line for the doors.
+   *
+   * The first cut let the nav wrap onto three lines, so ~190px — 22% of a 390×844
+   * viewport — was chrome before any artwork appeared. On the device where a curator
+   * actually looks (on a train, in a gallery), that is the most expensive real estate
+   * on the site and it was being spent on navigation.
+   *
+   * A horizontally scrolling rail keeps all five doors reachable in one line. Scrolling
+   * is native, so it works by touch, by keyboard and with a screen reader; the rail is
+   * never the ONLY route to anything — every door is also linked from the home
+   * composition, so a missed affordance costs nothing.
+   */
+  @media (max-width: 40rem) {
+    .masthead { padding: var(--space-3) 0; }
+    .masthead__inner { gap: var(--space-2) var(--space-4); align-items: center; }
+    .masthead__identity { flex: 1 1 auto; margin-inline-end: 0; }
+    .masthead__lang { flex: 0 0 auto; }
+
+    .masthead__nav {
+      flex-basis: 100%;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      /* Bleed to the viewport edge so the rail reads as scrollable rather than clipped. */
+      margin-inline: calc(-1 * clamp(1rem, 4vw, 3rem));
+      padding-inline: clamp(1rem, 4vw, 3rem);
+    }
+    .masthead__nav::-webkit-scrollbar { display: none; }
+    .masthead__nav ul { flex-wrap: nowrap; }
+    .masthead__nav a { white-space: nowrap; }
+
+    .colophon__contact { margin-inline-start: 0; flex-basis: 100%; }
+  }
+</style>

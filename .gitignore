@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.astro/
+
+# Generated. Placeholder sources come from `npm run seed:media`; derivatives from
+# `npm run build:media`. Real documentation replaces public/media/ in Phase 0 and
+# SHOULD then be tracked (or held in object storage and synced) — at which point
+# remove the first line below and keep ignoring only derived/.
+public/media/
+public/media/derived/
+
+# Generated from Caddyfile.template. Never edit or commit the output.
+Caddyfile
+
+*.log
+npm-debug.log*
+.DS_Store
+.env
+.env.*
+!.env.example

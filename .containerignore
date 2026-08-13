@@ -1,0 +1,23 @@
+# Never copied into the build context.
+node_modules
+dist
+.astro
+
+# Generated inside the image. Copying host-generated media in would bypass the ingest
+# pipeline and its colour assertion — which is exactly the silent failure the whole
+# image-handling design exists to prevent.
+public/media
+
+# Generated from Caddyfile.template by scripts/gen-csp.mjs during the build. Copying a
+# host copy in would ship stale CSP hashes, which blocks the site's own scripts.
+Caddyfile
+
+.git
+.gitignore
+.github
+*.log
+npm-debug.log*
+.DS_Store
+.vscode
+.idea
+README.md

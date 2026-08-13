@@ -1,0 +1,215 @@
+---
+import Base from '../../layouts/Base.astro'
+import Plate from '../../components/Plate.astro'
+import Caption from '../../components/Caption.astro'
+import { LOCALES, type Locale, resolveTranslated, title as titleOf } from '../../lib/i18n'
+import { routes, DOORS } from '../../lib/routes'
+import { getFeatured, getOnView, doorCounts, nameResolver } from '../../lib/query'
+import { formatDateRange } from '../../lib/format'
+import { ui, t, site } from '../../lib/site'
+import { WORK_DEPICTING_ROLES } from '../../lib/schema/vocab'
+
+export function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale } }))
+}
+
+const locale = Astro.params.locale as Locale
+
+const featured = await getFeatured()
+const onView = await getOnView()
+const counts = await doorCounts()
+const resolveName = await nameResolver()
+
+/**
+ * The frontispiece.
+ *
+ * Editorially chosen, never randomised — a curator who returns to a link they were sent
+ * must find the same work. It is the highest-ranked featured work, shown through its
+ * most recent showing's establishing view.
+ *
+ * The five-second requirement is "identity plus ONE unforgettable work", so this is
+ * one plate at full width with its caption ALWAYS VISIBLE. No loader, no logo
+ * animation, no percentage counter, no hover-to-reveal.
+ */
+const lead = featured[0]
+const leadShowing = lead?.showings.at(-1)
+const leadImage = leadShowing?.entry.data.assets.find(
+  (a): a is Extract<typeof a, { kind: 'image' }> =>
+    a.kind === 'image' && WORK_DEPICTING_ROLES.includes(a.role),
+)
+
+const practiceLine = locale === 'da'
+  ? 'Installationer bygget til bestemte rum, dokumenteret som det der er tilbage af dem.'
+  : 'Installations built for particular rooms, documented as what remains of them.'
+---
+
+<Base
+  locale={locale}
+  title={site.artistName}
+  bareTitle={true}
+  description={practiceLine}
+>
+  {/*
+    Identity BEFORE the work, not after it.
+
+    The five-second brief is "establish the artist's identity AND show one unforgettable
+    work". The first cut of this page put the <h1> below the plate for DOM-order reasons,
+    which meant that at 1440×1100 a visitor saw a photograph and a caption and no name —
+    the artist's name existed only as 11px of masthead. That fails the gate outright, and
+    it fails it in the one place the gate matters most.
+    A name and one line cost ~90px. The work still opens the page visually.
+  */}
+  <div class="shell">
+    <h1 class="identity">{site.artistName}</h1>
+    <p class="practice measure">{practiceLine}</p>
+  </div>
+
+  {lead && leadShowing && leadImage ? (
+    <section class="frontispiece">
+      <Plate asset={leadImage} locale={locale} sizes="100vw" priority={true} />
+      <div class="shell frontispiece__caption">
+        <Caption
+          locale={locale}
+          caption={{
+            title: lead.entry.data.title,
+            year: lead.entry.data.year,
+            yearEnd: lead.entry.data.yearEnd,
+            materials: lead.entry.data.materials,
+            aiUse: lead.entry.data.aiUse,
+            dimensions: leadShowing.entry.data.asInstalledDimensions ?? lead.entry.data.dimensions,
+            role: leadImage.role,
+            venueName: titleOf(leadShowing.venue.data.name),
+            city: leadShowing.venue.data.city,
+            dates: leadShowing.entry.data.dates,
+            credit: leadImage.credit,
+            resolveName,
+          }}
+        />
+        <p class="frontispiece__more">
+          <a href={routes.showing(lead.entry.id, leadShowing.entry.data.slug, locale)}>
+            {locale === 'da' ? 'Se opførelsen' : 'See this showing'}
+          </a>
+        </p>
+      </div>
+    </section>
+  ) : null}
+
+  <div class="shell">
+
+    {/* Auto-hides entirely when empty. A module rendering a past date reads as neglect. */}
+    {onView.length > 0 ? (
+      <section class="onview" aria-labelledby="onview-h">
+        <h2 id="onview-h">{locale === 'da' ? 'Vises nu' : 'Currently on view'}</h2>
+        <ul>
+          {onView.map((s) => (
+            <li>
+              <a href={routes.showing(s.entry.data.work.id, s.entry.data.slug, locale)}>
+                {titleOf(s.venue.data.name)}, {s.venue.data.city}
+              </a>
+              <span class="onview__dates">{formatDateRange(s.entry.data.dates, locale)}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ) : null}
+
+    {/*
+      Five doors, not one index. These are not modes: they are genuinely different
+      questions over one dataset. A researcher navigating by exhibition and a curator
+      navigating by spatial requirement are not two audiences needing two skins — they
+      are two queries needing two indexes. Counts are derived, so a door can never
+      advertise content that is not there.
+    */}
+    <nav class="doors" aria-label={locale === 'da' ? 'Indgange' : 'Ways in'}>
+      <ul>
+        {DOORS.map((door) => (
+          <li>
+            <a href={routes.door(door, locale)}>
+              <span class="doors__name">{t(ui.doors[door], locale)}</span>
+              <span class="doors__count">{counts[door]}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    {featured.length > 1 ? (
+      <section class="selected" aria-labelledby="selected-h">
+        {/* Labelled "Selected", because a curated order must be declared rather than
+            implied. The complete chronology is a separate, addressable route. */}
+        <h2 id="selected-h">{locale === 'da' ? 'Udvalgte værker' : 'Selected works'}</h2>
+        <ul>
+          {featured.slice(1).map((r) => {
+            const statement = resolveTranslated(r.entry.data.statementOfSignificance, locale).value
+            return (
+              <li>
+                <a href={routes.work(r.entry.id, locale)}>
+                  <cite lang={r.entry.data.title.lang}>{titleOf(r.entry.data.title)}</cite>
+                  {r.isLost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
+                  <span class="selected__year">{r.entry.data.year}</span>
+                </a>
+                {statement ? <p class="selected__line">{statement.split('. ')[0]}.</p> : null}
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+    ) : null}
+  </div>
+</Base>
+
+<style>
+  .frontispiece { margin-bottom: var(--space-6); }
+  .frontispiece__caption { margin-top: var(--space-4); }
+  .frontispiece__more { margin-top: var(--space-3); font: var(--type-meta); }
+
+    .identity {
+    font: var(--type-display);
+    margin-top: var(--space-5);
+  }
+
+  .practice {
+    font: var(--type-title);
+    margin: var(--space-2) 0 var(--space-4);
+    text-wrap: pretty;
+    color: var(--ink-secondary);
+  }
+
+  .onview { margin-bottom: var(--space-7); }
+  .onview h2 { font: var(--type-meta-strong); text-transform: uppercase; letter-spacing: 0.06em; }
+  .onview ul { margin-top: var(--space-3); display: grid; gap: var(--space-2); }
+  .onview li { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: baseline; }
+  .onview__dates { font: var(--type-meta); color: var(--ink-tertiary); }
+
+  .doors { margin-top: var(--space-7); }
+  .doors ul { display: flex; flex-wrap: wrap; gap: var(--space-5); }
+  .doors a {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    text-decoration: none;
+    min-height: 24px;
+  }
+  .doors a:hover .doors__name { text-decoration: underline; }
+  .doors__name { font: var(--type-title); }
+  .doors__count { font: var(--type-meta); color: var(--ink-tertiary); }
+
+  .selected { margin-top: var(--space-7); }
+  .selected h2 { font: var(--type-meta-strong); text-transform: uppercase; letter-spacing: 0.06em; }
+  .selected ul { margin-top: var(--space-4); display: grid; gap: var(--space-4); }
+  .selected a { text-decoration: none; display: flex; gap: var(--space-2); align-items: baseline; flex-wrap: wrap; }
+  .selected a:hover cite { text-decoration: underline; }
+  .selected cite { font: var(--type-title); font-style: italic; }
+  .selected__year { font: var(--type-meta); color: var(--ink-tertiary); }
+  .selected__line { font: var(--type-caption); color: var(--ink-secondary); max-width: var(--measure); margin-top: var(--space-1); }
+
+  /*
+   * Mobile is a distinct composition, not a narrower desktop. The frontispiece caption
+   * stays directly beneath the plate and the doors become a single readable column —
+   * the curator on a train is the priority reader here, not the widescreen visitor.
+   */
+  @media (max-width: 40rem) {
+    .doors ul { flex-direction: column; gap: var(--space-3); }
+    .doors__name { font: var(--type-body); }
+  }
+</style>

@@ -1,0 +1,8 @@
+{
+  "name": { "original": "Kunsthal Vestre", "lang": "da" },
+  "city": "København",
+  "country": "DK",
+  "kind": "kunsthal",
+  "coordinates": [55.6761, 12.5683],
+  "state": "public"
+}

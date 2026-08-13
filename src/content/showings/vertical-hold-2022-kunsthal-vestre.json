@@ -1,0 +1,76 @@
+{
+  "work": "vertical-hold",
+  "venue": "kunsthal-vestre",
+  "exhibition": "2022-standing-losses",
+  "slug": "2022-kunsthal-vestre",
+  "dates": { "start": "2022-03-04", "end": "2022-06-12", "precision": "day" },
+  "kind": "first-realisation",
+  "asInstalledDimensions": { "variable": false, "heightCm": 380, "widthCm": 720, "depthCm": 610 },
+  "space": {
+    "roomWidthM": 12.4,
+    "roomDepthM": 9.8,
+    "ceilingHeightM": 4.6,
+    "floorAreaM2": 121.5,
+    "dedicatedSpace": true,
+    "wallSurface": { "en": "Painted plasterboard, matt white", "da": "Malet gips, mat hvid" },
+    "floorSurface": { "en": "Sealed concrete", "da": "Forseglet beton" },
+    "light": "low",
+    "soundIsolation": false,
+    "plan": {
+      "vertices": [[0, 0], [12.4, 0], [12.4, 9.8], [0, 9.8]],
+      "doorAt": [0.8, 9.8],
+      "workFootprint": [[4.2, 3.1], [11.4, 3.1], [11.4, 9.2], [4.2, 9.2]],
+      "cameras": [
+        { "sequence": 1, "at": [1.2, 8.9], "bearingDeg": 42 },
+        { "sequence": 2, "at": [6.1, 1.4], "bearingDeg": 168 },
+        { "sequence": 3, "at": [11.8, 6.2], "bearingDeg": 265 }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "vh-2022-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": { "src": "/media/vh-2022-01.jpg", "width": 3000, "height": 2000, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": { "described": { "en": "A leaning steel scaffold six bays wide fills the right half of a concrete-floored room, carrying twenty-two switched-on monitors in five tiers. Each screen shows a still frame of grey static. The scaffold reaches roughly four-fifths of the way to a 4.6 m ceiling.", "da": "Et hældende stålstillads på seks fag fylder højre halvdel af et rum med betongulv og bærer toogtyve tændte monitorer i fem niveauer. Hver skærm viser et fastfrosset billede af grå sendestøj. Stilladset når cirka fire femtedele op mod et 4,6 m højt loft." }, "decorative": false },
+      "credit": { "photographer": "bodil-hjort", "photoCreditKind": "copyright" },
+      "viewingDistanceM": 8.4
+    },
+    {
+      "id": "vh-2022-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": { "src": "/media/vh-2022-02.jpg", "width": 2000, "height": 3000, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": { "described": { "en": "Seen end-on from the room's short wall, the scaffold reads as a single narrow column of light. The one-degree lean is visible against the vertical line of the door frame behind it.", "da": "Set fra enden ved rummets korte væg fremstår stilladset som én smal lyssøjle. Hældningen på én grad ses tydeligt mod dørkarmens lodrette linje bagved." }, "decorative": false },
+      "credit": { "photographer": "bodil-hjort", "photoCreditKind": "copyright" },
+      "viewingDistanceM": 9.1
+    },
+    {
+      "id": "vh-2022-03",
+      "kind": "image",
+      "role": "scale",
+      "sequence": 3,
+      "file": { "src": "/media/vh-2022-03.jpg", "width": 3000, "height": 2000, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": { "described": { "en": "A visitor stands at the foot of the scaffold, reaching roughly to the second monitor tier. The topmost monitors are about twice their height above them.", "da": "En besøgende står ved stilladsets fod og når omtrent op til andet monitorniveau. De øverste monitorer sidder cirka to gange personens højde derover." }, "decorative": false },
+      "credit": { "photographer": "bodil-hjort", "photoCreditKind": "copyright" }
+    },
+    {
+      "id": "vh-2022-detail",
+      "kind": "image",
+      "role": "detail",
+      "file": { "src": "/media/vh-2022-detail.jpg", "width": 2400, "height": 2400, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": { "described": { "en": "Close view of one 17-inch monitor showing a frozen band of static, its bezel scuffed and marked with a broadcaster's inventory sticker.", "da": "Nærbillede af én 17-tommer monitor med et fastfrosset bånd af sendestøj; rammen er slidt og bærer et inventarmærkat fra en tv-station." }, "decorative": false },
+      "credit": { "photographer": "bodil-hjort", "photoCreditKind": "copyright" }
+    }
+  ],
+  "contributors": [{ "contributor": "bodil-hjort", "role": "photographer" }, { "contributor": "nils-agger", "role": "curator" }],
+  "notRecorded": {
+    "en": "The monitors emitted a continuous high-frequency whine that is absent from every photograph and from the walkthrough audio.",
+    "da": "Monitorerne udsendte en vedvarende højfrekvent hyletone, som mangler på alle fotografier og i gennemgangens lyd."
+  },
+  "state": "public",
+  "lastReviewedOn": "2026-02-11"
+}

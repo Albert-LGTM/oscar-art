@@ -1,0 +1,162 @@
+---
+import { buildCaption, toPlainText, type CaptionInput } from '../lib/caption'
+import type { Locale } from '../lib/i18n'
+import { ui, t } from '../lib/site'
+
+/**
+ * Caption — the CAA citation string as a real component.
+ *
+ * Rendered and copyable forms come from ONE source, so what a curator pastes into a
+ * proposal cannot drift from what they read on the page. The title renders inside
+ * <cite> with its own `lang` attribute, because a Danish work title read aloud by an
+ * English screen-reader voice is both wrong and unintelligible.
+ *
+ * The caption is ALWAYS VISIBLE. Never hover-only, never behind a disclosure. Curators
+ * have withheld exhibition invitations from artists whose sites "lacked important
+ * information, such as image captions" — so the metadata is primary content, displayed
+ * by default, not an overlay that appears on intent.
+ */
+
+interface Props {
+  caption: CaptionInput
+  locale: Locale
+  /** Publishes the colorimetric contract beneath the plate. Set on inspection routes
+   *  and on the primary plate of a record; omitted on index thumbnails where it would
+   *  be noise. */
+  declareColour?: { profile: string; width: number; height: number; href?: string }
+  copyable?: boolean
+}
+
+const { caption, locale, declareColour, copyable = true } = Astro.props
+const parts = buildCaption(caption, locale)
+const plain = toPlainText(parts)
+
+const body = parts.filter((p) => p.kind !== 'rights')
+const rights = parts.find((p) => p.kind === 'rights')
+
+/*
+ * The caption is assembled as THREE nodes, not one node per part.
+ *
+ * `compressHTML` is disabled project-wide (see astro.config.mjs) so that significant
+ * whitespace inside prose survives. The cost is that source newlines BETWEEN sibling
+ * elements render as spaces — which in a comma-separated citation produces
+ * "Vertical Hold , 2022 , installation view", with a space before every comma. That is
+ * a typographic error in the one element a registrar is most likely to copy.
+ *
+ * So the only element that must stay an element is the title (it needs <cite> and its
+ * own `lang`); everything on either side is flattened to a single string first.
+ */
+const titleIndex = body.findIndex((p) => p.kind === 'title')
+const titlePart = titleIndex >= 0 ? body[titleIndex] : null
+const beforeTitle = body.slice(0, titleIndex >= 0 ? titleIndex : body.length).map((p) => p.value).join(', ')
+const afterTitle = titleIndex >= 0 ? body.slice(titleIndex + 1).map((p) => p.value).join(', ') : ''
+
+const lead = beforeTitle ? `${beforeTitle}, ` : ''
+const tail = afterTitle ? `, ${afterTitle}` : ''
+---
+
+<figcaption class="caption">
+  <p class="caption__line">{lead}{titlePart && titlePart.kind === 'title' ? <cite lang={titlePart.lang}>{titlePart.value}</cite> : null}{tail}{rights ? <span class="caption__rights"> ({rights.value})</span> : null}</p>
+
+  {declareColour ? (
+    <p class="caption__declaration">
+      <span>{locale === 'da' ? 'Neutral baggrund, kroma 0. Ingen farvebehandling.' : 'Plate ground neutral, chroma 0. No colour treatment applied.'}</span>
+      <span>{declareColour.width} × {declareColour.height} px</span>
+      <span>{declareColour.profile}</span>
+      {declareColour.href ? (
+        <a href={declareColour.href}>{locale === 'da' ? 'Originalfil' : 'Original file'}</a>
+      ) : null}
+    </p>
+  ) : null}
+
+  {copyable ? (
+    <button type="button" class="caption__copy" data-citation={plain} hidden>
+      {t(ui.copyCitation, locale)}
+    </button>
+  ) : null}
+</figcaption>
+
+<style>
+  .caption {
+    font: var(--type-caption);
+    color: var(--ink-secondary);
+    max-width: 68ch;
+  }
+
+  .caption__line {
+    margin: 0;
+  }
+
+  .caption cite {
+    font-style: italic;
+    /* CAA sets the title in italic; it is not emphasis, and it must not inherit a
+       weight change from a parent. */
+    font-weight: inherit;
+  }
+
+  .caption__rights {
+    color: var(--ink-tertiary);
+  }
+
+  /*
+   * The published colorimetric contract. No artist site states what colour its
+   * background is or why — stating it is what lets a registrar trust the reproduction
+   * rather than take it on faith.
+   */
+  .caption__declaration {
+    margin: var(--space-2) 0 0;
+    font: var(--type-meta);
+    color: var(--ink-tertiary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-3);
+  }
+
+  .caption__copy {
+    margin-top: var(--space-2);
+    font: var(--type-meta);
+    color: var(--ink-secondary);
+    background: none;
+    border: 1px solid var(--rule);
+    padding: 0.35em 0.7em;
+    cursor: pointer;
+    /* 2.5.8 Target Size (Minimum) is 24 × 24 CSS px at AA — note, not 44. */
+    min-height: 24px;
+  }
+
+  .caption__copy:hover { color: var(--ink-primary); }
+  .caption__copy:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+</style>
+
+<script>
+  /*
+   * Progressive enhancement, and the reason the button ships `hidden`: a copy control
+   * that does nothing without JavaScript is worse than no control. The script reveals
+   * it; a no-JS visitor simply reads and selects the caption text, which is real
+   * selectable text in the DOM rather than a canvas texture or a raster title.
+   */
+  for (const el of document.querySelectorAll<HTMLButtonElement>('.caption__copy')) {
+    el.hidden = false
+    el.addEventListener('click', async () => {
+      const text = el.dataset.citation
+      if (!text) return
+      try {
+        await navigator.clipboard.writeText(text)
+        const original = el.textContent
+        el.textContent = el.getAttribute('data-done') ?? '✓'
+        setTimeout(() => { el.textContent = original }, 1600)
+      } catch {
+        // Clipboard denied (permissions, insecure context). Select the caption instead
+        // so the reader can copy manually — failing silently would be worse.
+        const line = el.closest('figcaption')?.querySelector('.caption__line')
+        if (line) {
+          const range = document.createRange()
+          range.selectNodeContents(line)
+          const sel = window.getSelection()
+          sel?.removeAllRanges()
+          sel?.addRange(range)
+        }
+      }
+    })
+  }
+</script>

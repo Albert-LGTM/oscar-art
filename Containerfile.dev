@@ -1,0 +1,29 @@
+# Ståsted — development image.
+#
+# Astro dev server with hot reload, for editing content and components against a live
+# browser. The source tree is bind-mounted at run time; only node_modules lives in the
+# image, so a native sharp build is not repeated on every file change.
+FROM docker.io/library/node:22-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+# Media is generated rather than mounted, so the dev container has something to render
+# on first run even before real documentation exists.
+COPY . .
+RUN npm run seed:media && npm run build:media
+
+EXPOSE 4321
+
+# --host is required: without it Astro binds 127.0.0.1 inside the container's own
+# network namespace and the published port answers nothing, which looks exactly like a
+# broken build.
+#
+# `::` rather than `0.0.0.0`, deliberately. On Linux a dual-stack IPv6 socket also
+# accepts IPv4, whereas 0.0.0.0 is IPv4-only — and `localhost` resolves to ::1 first on
+# this system, so an IPv4-only bind means the browser connects, sends the request and
+# then hangs with no response. That failure looks like a broken dev server rather than
+# an address-family mismatch, and costs an hour the first time you meet it.
+CMD ["npm", "run", "dev", "--", "--host", "::", "--port", "4321"]
