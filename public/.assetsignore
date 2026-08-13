@@ -1,0 +1,17 @@
+# Files present in the build output that must NOT be uploaded as public assets.
+#
+# Cloudflare's Workers static-asset uploader reads this from the assets directory.
+# `public/` is copied into `dist/` at build time, so this file lands where Wrangler
+# looks for it.
+#
+# It also exists for a second, duller reason: `public/` previously contained nothing
+# but the generated (and gitignored) `media/` directory, so git tracked no files under
+# it and the directory did not exist in a fresh clone at all. Wrangler's Astro
+# auto-setup then failed with "Missing file or directory: public/.assetsignore" —
+# a deploy failure caused entirely by an empty directory. A real tracked file fixes it.
+
+# Host configuration. Workers consumes these to apply headers and redirects; serving
+# them as static files would publish the config and, worse, invite someone to edit the
+# copy in dist/ rather than the generator that produces it.
+_headers
+_redirects

@@ -1,0 +1,35 @@
+{
+  // Cloudflare Workers — static assets.
+  //
+  // The dashboard created this project under "Workers & Pages" as a WORKER (the tell is
+  // Version History, traffic splitting and Median CPU Time in the UI — Pages has none of
+  // those). A Worker serving static assets needs this config to know what to serve;
+  // Pages infers it from the dashboard settings instead. Without it there is nothing to
+  // deploy, however successful the build was.
+  //
+  // There is no Worker script: `assets.directory` with no `main` makes this a pure
+  // static-asset Worker, which is what an archive of flat files should be. No compute,
+  // no cold starts, nothing to invoke.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "oscar-art",
+  "compatibility_date": "2026-08-13",
+
+  "assets": {
+    "directory": "./dist",
+
+    // Serve dist/404.html WITH a 404 status. The default ("none") would return the
+    // asset-not-found response, and the alternative ("single-page-application") would
+    // serve index.html with a 200 — a soft 404 that tells a curator a mistyped URL is a
+    // real page, and poisons indexing. This site has real routes, so it gets real 404s.
+    "not_found_handling": "404-page",
+
+    // The build emits directory-style URLs with trailing slashes (see astro.config.mjs),
+    // because a work URL is a citation target that must not change shape. This resolves
+    // /en/works/vertical-hold/ to its index.html and keeps the slash.
+    "html_handling": "auto-trailing-slash"
+  }
+
+  // `_headers` and `_redirects` are read from dist/ automatically — they are generated
+  // by scripts/gen-csp.mjs from the same directive list as the Caddyfile, so the CSP
+  // cannot drift between Cloudflare and the self-hosted container.
+}
