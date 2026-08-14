@@ -1,0 +1,83 @@
+{
+  "title": { "original": "Hands Out Your Pocket", "lang": "en" },
+  "materials": {},
+  "dimensions": { "variable": true },
+  "existenceStatus": "not-recorded",
+  "state": "public",
+  "featured": true,
+  "featuredRank": 1,
+  "assets": [
+    {
+      "id": "hoyp-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": { "src": "/media/hoyp-01.jpg", "width": 4096, "height": 2734, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": {
+        "described": {
+          "en": "A single continuous polished metal tube loops and doubles through a white room, rising into arches roughly twice head height and gathering at the centre into a cluster of overlapping rings. Its ends drop to the floor into rough concrete slab feet. Seven white cast cubes sit on the pale grey floor beneath it. Tall arched windows and cast-iron radiators line the left wall; a continuous fluorescent tube runs the length of the ceiling cove.",
+          "da": "Ét sammenhængende poleret metalrør slår sløjfer gennem et hvidt rum, rejser sig i buer omtrent to gange hovedhøjde og samler sig midtpå i en klynge af overlappende ringe. Enderne føres ned i grove betonfødder på gulvet. Syv hvide støbte terninger står på det lysegrå gulv nedenunder. Høje buede vinduer og støbejernsradiatorer står langs venstre væg; et gennemgående lysstofrør løber i loftets hulkel."
+        },
+        "decorative": false
+      },
+      "credit": { "photographer": "unknown", "photoCreditKind": "by" }
+    },
+    {
+      "id": "hoyp-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": { "src": "/media/hoyp-02.jpg", "width": 4096, "height": 2732, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": {
+        "described": {
+          "en": "The same work seen square-on from the front, so the tube reads as a single flat line drawn across the wall: two tall arches at either side, a wave running between them, and a knot of four overlapping rings held at the centre. The concrete feet and white cubes are spread across the floor in front.",
+          "da": "Samme værk set lige forfra, så røret læses som én flad streg tegnet hen over væggen: to høje buer i hver side, en bølge imellem dem og en knude af fire overlappende ringe holdt i midten. Betonfødderne og de hvide terninger er fordelt på gulvet foran."
+        },
+        "decorative": false
+      },
+      "credit": { "photographer": "unknown", "photoCreditKind": "by" }
+    },
+    {
+      "id": "hoyp-03",
+      "kind": "image",
+      "role": "detail",
+      "file": { "src": "/media/hoyp-03.jpg", "width": 4096, "height": 2733, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": {
+        "described": {
+          "en": "Close view of the centre of the work, where the tube coils into four rings of decreasing size that pass in front of and behind one another against a plain white wall.",
+          "da": "Nærbillede af værkets midte, hvor røret ruller sig sammen i fire ringe af aftagende størrelse, der passerer foran og bag hinanden mod en enkel hvid væg."
+        },
+        "decorative": false
+      },
+      "credit": { "photographer": "unknown", "photoCreditKind": "by" }
+    },
+    {
+      "id": "hoyp-04",
+      "kind": "image",
+      "role": "detail",
+      "file": { "src": "/media/hoyp-04.jpg", "width": 4096, "height": 2731, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": {
+        "described": {
+          "en": "Close view of the tube's surface: brushed metal with visible lengthwise scoring, a faint weld seam running around the curve, and grey smudges where the bend was worked. The bends are wide and even, without kinking or flattening.",
+          "da": "Nærbillede af rørets overflade: børstet metal med synlige længderidser, en svag svejsesøm rundt om buen og grå udtværinger, hvor bukningen er sket. Buerne er brede og jævne, uden knæk eller fladtrykning."
+        },
+        "decorative": false
+      },
+      "credit": { "photographer": "unknown", "photoCreditKind": "by" }
+    },
+    {
+      "id": "hoyp-05",
+      "kind": "image",
+      "role": "detail",
+      "file": { "src": "/media/hoyp-05.jpg", "width": 2360, "height": 1574, "colourProfile": "sRGB IEC61966-2.1" },
+      "alt": {
+        "described": {
+          "en": "Floor level. Five matte off-white cast cubes, roughly knee height, stand on a grey painted floor. Behind them the tube's ends are set into rough grey concrete slabs, and one arc of the tube passes low between the cubes.",
+          "da": "Gulvniveau. Fem matte offwhite støbte terninger i omtrent knæhøjde står på et gråmalet gulv. Bag dem er rørets ender sat ned i grove grå betonplader, og en af rørets buer passerer lavt mellem terningerne."
+        },
+        "decorative": false
+      },
+      "credit": { "photographer": "unknown", "photoCreditKind": "by" }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# Ståsted — archive of record.
+#
+# Everything substantive is open to crawlers on purpose. This is the authoritative
+# chronology for the practice: Weilbachs Kunstnerleksikon has not been updated since
+# 1994 and Kunstindeks Danmark covers only museum holdings, so for a living Danish
+# artist this site IS the record researchers and institutions will cite. It should be
+# findable in full.
+
+User-agent: *
+Allow: /
+
+# The inspection route is one file viewed at full size — an instrument, not a page about
+# the work. The showing records are the citable surface and carry the same images with
+# their full context, so indexing both would split relevance between them.
+Disallow: /inspect/
+
+# Private viewing rooms are unguessable expiring links, never listed anywhere. Naming
+# the prefix here is deliberate: it costs nothing (the tokens are the security, not the
+# obscurity) and it stops a crawler wasting requests on 410s.
+Disallow: /viewing-room/
+
+Sitemap: https://example.invalid/sitemap-index.xml

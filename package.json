@@ -21,8 +21,9 @@
     "gen:csp": "node scripts/gen-csp.mjs",
     "smoke": "bash scripts/smoke.sh",
     "lint:links": "node scripts/lint-links.mjs",
-    "build:cf": "npm run seed:media && npm run build:media && npm run build && npm run gen:csp && npm run lint:links && npm run lint:semantics && npm run test:colour",
-    "deploy": "npm run build:cf && wrangler deploy"
+    "build:cf": "npm run seed:media && npm run build:media && npm run build:social && npm run build && npm run gen:csp && npm run lint:links && npm run lint:semantics && npm run test:colour",
+    "deploy": "npm run build:cf && wrangler deploy",
+    "build:social": "node scripts/build-social.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

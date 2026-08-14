@@ -1,5 +1,5 @@
 import { getCollection, getEntry, type CollectionEntry } from 'astro:content'
-import { LOST_STATUSES, type ExistenceStatus } from './schema/vocab'
+import { LOST_STATUSES, IMAGE_ROLES, WORK_DEPICTING_ROLES, type ExistenceStatus } from './schema/vocab'
 
 /**
  * The internal content API.
@@ -25,6 +25,19 @@ export type Exhibition = CollectionEntry<'exhibitions'>
  *  `archived` is reachable by direct URL but excluded from indexes. */
 const isPublic = <T extends { data: { state?: string } }>(e: T) => e.data.state === 'public'
 const isListable = isPublic
+
+/**
+ * An EMPTY collection is a legitimate archival state, not an error.
+ *
+ * A real archive routinely holds works before it holds their showings — the artist
+ * sends photographs, and the venues and dates follow. Astro throws on getCollection for
+ * an empty collection, so every read goes through this. Treating "nothing recorded yet"
+ * as a crash would force the fabrication of a placeholder venue purely to keep the
+ * build alive, which is the exact failure the content model exists to prevent.
+ */
+async function safeCollection<T>(fn: () => Promise<T[]>): Promise<T[]> {
+  try { return await fn() } catch { return [] }
+}
 
 export interface ShowingRecord {
   entry: Showing
@@ -57,7 +70,7 @@ async function hydrateShowing(entry: Showing): Promise<ShowingRecord | null> {
  *  the ledger's whole argument is that the work is constant and the room is not, which
  *  is only legible in sequence. */
 export async function showingsForWork(workId: string): Promise<ShowingRecord[]> {
-  const all = await getCollection('showings', (s) => isPublic(s) && s.data.work.id === workId)
+  const all = await safeCollection(() => getCollection('showings', (s) => isPublic(s) && s.data.work.id === workId))
   const hydrated = await Promise.all(all.map(hydrateShowing))
   return hydrated
     .filter((s): s is ShowingRecord => s !== null)
@@ -83,9 +96,11 @@ export async function getWorkRecord(work: Work): Promise<WorkRecord> {
  * home composition, where the authorship is visible as authorship.
  */
 export async function getWorkRecords(): Promise<WorkRecord[]> {
-  const works = await getCollection('works', isListable)
+  const works = await safeCollection(() => getCollection('works', isListable))
   const records = await Promise.all(works.map(getWorkRecord))
-  return records.sort((a, b) => b.entry.data.year - a.entry.data.year)
+  // Newest first, with undated works last rather than at an arbitrary position — an
+  // undefined year in a numeric subtraction yields NaN and leaves the order to chance.
+  return records.sort((a, b) => (b.entry.data.year ?? -Infinity) - (a.entry.data.year ?? -Infinity))
 }
 
 export async function getFeatured(): Promise<WorkRecord[]> {
@@ -106,7 +121,7 @@ export async function getFeatured(): Promise<WorkRecord[]> {
  */
 export async function getOnView(today = new Date()): Promise<ShowingRecord[]> {
   const iso = today.toISOString().slice(0, 10)
-  const all = await getCollection('showings', isPublic)
+  const all = await safeCollection(() => getCollection('showings', isPublic))
   const hydrated = await Promise.all(all.map(hydrateShowing))
   return hydrated
     .filter((s): s is ShowingRecord => s !== null)
@@ -118,7 +133,7 @@ export async function getOnView(today = new Date()): Promise<ShowingRecord[]> {
 
 /** Every showing, newest first — the chronology door, and the CV's exhibition lines. */
 export async function getAllShowings(): Promise<ShowingRecord[]> {
-  const all = await getCollection('showings', isPublic)
+  const all = await safeCollection(() => getCollection('showings', isPublic))
   const hydrated = await Promise.all(all.map(hydrateShowing))
   return hydrated
     .filter((s): s is ShowingRecord => s !== null)
@@ -135,11 +150,11 @@ export async function showingsAtVenue(venueId: string): Promise<ShowingRecord[]>
  *  is not there — the Jeppe Hein failure, where nav links to a /works that 404s. */
 export async function doorCounts() {
   const [works, showings, venues, exhibitions, texts] = await Promise.all([
-    getCollection('works', isListable),
-    getCollection('showings', isPublic),
-    getCollection('venues', isListable),
-    getCollection('exhibitions', isListable),
-    getCollection('texts', isListable).catch(() => []),
+    safeCollection(() => getCollection('works', isListable)),
+    safeCollection(() => getCollection('showings', isPublic)),
+    safeCollection(() => getCollection('venues', isListable)),
+    safeCollection(() => getCollection('exhibitions', isListable)),
+    safeCollection(() => getCollection('texts', isListable)),
   ])
   return {
     works: works.length,
@@ -153,7 +168,7 @@ export async function doorCounts() {
 /** Resolve a contributor id to a display name for caption rendering. Unresolved ids
  *  fall through unchanged, so a literal name typed into the field still renders. */
 export async function nameResolver(): Promise<(id: string) => string> {
-  const contributors = await getCollection('contributors')
+  const contributors = await safeCollection(() => getCollection('contributors'))
   const map = new Map(contributors.map((c) => [c.id, c.data.name]))
   return (id: string) => map.get(id) ?? id
 }
@@ -165,8 +180,9 @@ export async function nameResolver(): Promise<(id: string) => string> {
 export interface AssetRecord {
   asset: Extract<Showing['data']['assets'][number], { kind: 'image' }>
   work: Work
-  showing: Showing
-  venue: Venue
+  /** Absent when the documentation's showing is not yet established. */
+  showing?: Showing
+  venue?: Venue
 }
 
 /**
@@ -178,8 +194,10 @@ export interface AssetRecord {
  * described. A guarantee with no route to it is a promise, not a property.
  */
 export async function getAssetRecords(): Promise<AssetRecord[]> {
-  const showings = await getCollection('showings', isPublic)
   const out: AssetRecord[] = []
+
+  // Documentation attached to a showing — the normal case.
+  const showings = await safeCollection(() => getCollection('showings', isPublic))
   for (const showing of showings) {
     const work = await getEntry(showing.data.work)
     const venue = await getEntry(showing.data.venue)
@@ -188,7 +206,70 @@ export async function getAssetRecords(): Promise<AssetRecord[]> {
       if (asset.kind === 'image') out.push({ asset, work, showing, venue })
     }
   }
+
+  /*
+   * Documentation attached to the WORK, whose showing is not yet established.
+   *
+   * Omitting these was a real defect rather than an oversight: the work record links
+   * every plate to /inspect/, so those links resolved to nothing, and the duplicate-id
+   * guard in the inspect route could not see half the archive's images — a collision
+   * between a work asset and a showing asset would have passed silently.
+   */
+  const works = await safeCollection(() => getCollection('works', isListable))
+  for (const work of works) {
+    for (const asset of work.data.assets) {
+      if (asset.kind === 'image') out.push({ asset, work })
+    }
+  }
+
   return out
+}
+
+/**
+ * The one image that best stands for a work — and WHERE it came from.
+ *
+ * Four surfaces need this (frontispiece, contact sheet, social card, record) and each
+ * had grown its own copy, every copy reaching only into `showings`. When the archive's
+ * first real works arrived carrying work-level documentation and no established showing,
+ * all four resolved to nothing — and because each renders `image ? … : null`, all four
+ * failed SILENTLY. The homepage and the works index shipped with no artwork on them at
+ * all, which is the single worst thing an artist's site can do, and no guard caught it
+ * because "no image" is indistinguishable from "no work" at the type level.
+ *
+ * So: one resolver, and it returns the showing context alongside the image rather than
+ * making each caller go looking for it a second time.
+ *
+ * Preference order is deliberate. A showing's establishing view is the better plate when
+ * it exists — it is the work in a real room, which is the argument of the whole site —
+ * and the MOST RECENT showing is preferred over the first, because that is the work as
+ * it currently stands. Work-level documentation is the fallback, never the default.
+ */
+export interface KeyImage {
+  asset: Extract<Showing['data']['assets'][number], { kind: 'image' }>
+  /** Absent when the image is work-level documentation with no established showing. */
+  showing?: ShowingRecord
+}
+
+export function keyImageFor(record: WorkRecord): KeyImage | undefined {
+  const rank = (role: string) => {
+    const i = IMAGE_ROLES.indexOf(role as (typeof IMAGE_ROLES)[number])
+    return i === -1 ? IMAGE_ROLES.length : i
+  }
+  const depicting = (assets: readonly Showing['data']['assets'][number][]) =>
+    assets
+      .filter((a): a is Extract<typeof a, { kind: 'image' }> =>
+        a.kind === 'image' && WORK_DEPICTING_ROLES.includes(a.role))
+      // `establishing` before `detail`, so a close crop of one component never stands in
+      // for the installation when a full view of the room is available.
+      .sort((a, b) => rank(a.role) - rank(b.role))[0]
+
+  for (const showing of [...record.showings].reverse()) {
+    const asset = depicting(showing.entry.data.assets)
+    if (asset) return { asset, showing }
+  }
+
+  const asset = depicting(record.entry.data.assets)
+  return asset ? { asset } : undefined
 }
 
 // ---------------------------------------------------------------------------
@@ -217,7 +298,10 @@ export function facetsFor(record: WorkRecord): { key: FacetKey; value: string }[
   const w = record.entry.data
   const out: { key: FacetKey; value: string }[] = []
 
-  out.push({ key: 'decade', value: `${Math.floor(w.year / 10) * 10}s` })
+  // Only when a year is actually recorded. Without this guard an undefined year
+  // produced `/works/by/decade/NaNs/` — a live, crawlable page asserting a decade that
+  // does not exist.
+  if (w.year !== undefined) out.push({ key: 'decade', value: `${Math.floor(w.year / 10) * 10}s` })
   out.push({ key: 'status', value: w.existenceStatus })
 
   if (w.technical?.light === 'blackout') out.push({ key: 'blackout', value: 'required' })

@@ -38,7 +38,10 @@ export type CaptionPart =
 
 export interface CaptionInput {
   title: OriginalWithGloss
-  year: number
+  /** Absent when the year has not been supplied. The caption says so rather than
+   *  omitting the slot silently — a citation with no date reads as an oversight, while
+   *  "year not recorded" reads as a fact a curator can act on. */
+  year?: number
   yearEnd?: number | 'ongoing'
   materials?: Translated
   aiUse?: Translated
@@ -68,8 +71,12 @@ export function buildCaption(input: CaptionInput, locale: Locale): CaptionPart[]
   // Artist, Title, Date
   push(site.artistName)
   parts.push({ kind: 'title', value: titleOf(input.title), lang: input.title.lang })
-  push(input.yearEnd === 'ongoing' ? `${input.year}–${locale === 'da' ? 'igangværende' : 'ongoing'}`
-    : input.yearEnd ? `${input.year}–${input.yearEnd}` : String(input.year))
+  if (input.year === undefined) {
+    push(locale === 'da' ? 'år ikke registreret' : 'year not recorded')
+  } else {
+    push(input.yearEnd === 'ongoing' ? `${input.year}–${locale === 'da' ? 'igangværende' : 'ongoing'}`
+      : input.yearEnd ? `${input.year}–${input.yearEnd}` : String(input.year))
+  }
 
   // Medium and materials. AI use is appended INSIDE the materials clause because that
   // is where Statens Kunstfond requires it to appear, not as a separate disclosure.

@@ -52,7 +52,11 @@ if (work) {
     '@id': abs(routes.work(work.entry.id, locale)) + '#work',
     name: titleOf(w.title),
     creator: person,
-    dateCreated: String(w.year),
+    // Omitted when unknown. `String(undefined)` emitted the literal string "undefined"
+    // as a machine-readable creation date — a consumer would ingest it as fact. The rule
+    // this file states at the top is that structured data must never assert more than
+    // the page does; an absent property asserts nothing, which is correct here.
+    ...(w.year !== undefined ? { dateCreated: String(w.year) } : {}),
     ...(materials ? { artMedium: materials } : {}),
     ...(statement ? { description: statement } : {}),
     // CDWA treats "variable" as a controlled qualifier, not an evasion — so say it

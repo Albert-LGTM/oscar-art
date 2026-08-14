@@ -36,11 +36,18 @@ const works = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/works' }),
   schema: z.object({
     title: originalWithGloss(),
-    /** Year of the work's conception/first realisation. NOT the upload date — Johan
-     *  Bech Jespersen's site stamps every work with its WordPress publish date, so the
-     *  wrong year is the machine-readable one and "Archives" tells a curator when the
-     *  website was built. */
-    year: z.number().int().min(1900).max(2100),
+    /**
+     * Year of the work's conception/first realisation. NOT the upload date — Johan Bech
+     * Jespersen's site stamps every work with its WordPress publish date, so the wrong
+     * year is the machine-readable one and "Archives" tells a curator when the website
+     * was built.
+     *
+     * OPTIONAL, deliberately. A work whose year has not yet been supplied renders "Year
+     * not recorded" — which is a true statement a curator can act on. A fabricated year
+     * is indistinguishable from a real one and propagates into the caption, the CV, the
+     * JSON-LD and every funding application generated from this record.
+     */
+    year: z.number().int().min(1900).max(2100).optional(),
     /** For ongoing works: renders as "2019–ongoing" (CAA convention). */
     yearEnd: z.union([z.number().int(), z.literal('ongoing')]).optional(),
 
@@ -89,6 +96,22 @@ const works = defineCollection({
 
     /** The work's key image, used in indexes. Always rendered at native aspect. */
     keyImage: imageAsset().optional(),
+
+    /**
+     * Documentation whose SHOWING is not yet established.
+     *
+     * The archive's spine is Work → Showing, because for installation art the venue is
+     * constitutive rather than incidental. But a real archive routinely receives
+     * photographs before it receives their context: the artist sends a folder, and the
+     * venue, dates and photographer arrive later — or have to be reconstructed.
+     *
+     * Modelling that state honestly is better than the two alternatives, which are to
+     * invent a showing (fabricating the one fact the whole model exists to hold) or to
+     * withhold the work until the paperwork catches up. Images here render on the work
+     * record with an explicit note that their showing is not yet recorded, and they
+     * MOVE to a showing the moment one is created.
+     */
+    assets: z.array(asset).default([]),
 
     state: z.enum(PUBLICATION_STATE).default('draft'),
     featured: z.boolean().default(false),

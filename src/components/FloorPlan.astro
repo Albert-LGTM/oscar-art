@@ -56,12 +56,32 @@ const label = locale === 'da'
   ? `Plantegning: rummet er ${formatLength(W, locale)} bredt og ${formatLength(D, locale)} dybt${space.ceilingHeightM ? `, med ${formatLength(space.ceilingHeightM, locale)} til loftet` : ''}.`
   : `Floor plan: the room is ${formatLength(W, locale)} wide and ${formatLength(D, locale)} deep${space.ceilingHeightM ? `, with a ceiling at ${formatLength(space.ceilingHeightM, locale)}` : ''}.`
 
-/** Where a camera stands, described in words rather than coordinates. */
+/**
+ * Where a camera stands, described in words rather than coordinates.
+ *
+ * This is the SCREEN-READER EQUIVALENT of the drawing, so the sentence has to be real
+ * language in both locales. The first version concatenated two axis words unchanged and
+ * produced "fra den sydlige vestlige del af rummet" in Danish (which compounds compass
+ * directions into one word: sydvestlige) and "from the middle centre of the room" in
+ * English when a camera stood near the middle of both axes.
+ */
 function describe(cam: { at: [number, number] }): string {
   const [x, y] = cam.at
-  const h = x < W / 3 ? (locale === 'da' ? 'vestlige' : 'west') : x > (2 * W) / 3 ? (locale === 'da' ? 'østlige' : 'east') : (locale === 'da' ? 'midterste' : 'centre')
-  const v = y < D / 3 ? (locale === 'da' ? 'nordlige' : 'north') : y > (2 * D) / 3 ? (locale === 'da' ? 'sydlige' : 'south') : (locale === 'da' ? 'midterste' : 'middle')
-  return locale === 'da' ? `fra den ${v} ${h} del af rummet` : `from the ${v} ${h} of the room`
+  const ew = x < W / 3 ? 'w' : x > (2 * W) / 3 ? 'e' : null
+  const ns = y < D / 3 ? 'n' : y > (2 * D) / 3 ? 's' : null
+
+  if (locale === 'da') {
+    // Danish compounds: nord + vest → nordvestlige. A single axis stands alone.
+    const DA: Record<string, string> = { n: 'nord', s: 'syd', e: 'øst', w: 'vest' }
+    if (!ns && !ew) return 'fra midten af rummet'
+    const word = [ns, ew].filter(Boolean).map((k) => DA[k!]).join('')
+    return `fra den ${word}lige del af rummet`
+  }
+
+  const EN: Record<string, string> = { n: 'north', s: 'south', e: 'east', w: 'west' }
+  if (!ns && !ew) return 'from the centre of the room'
+  const word = ns && ew ? `${EN[ns]}-${EN[ew]}` : EN[(ns ?? ew)!]
+  return `from the ${word} of the room`
 }
 ---
 
@@ -132,7 +152,11 @@ function describe(cam: { at: [number, number] }): string {
 ) : null}
 
 <style>
-  .plan { margin: 0; flex: 0 0 auto; }
+  /* `flex: 0 0 auto` locked the figure to its max-content width — set by the longest
+     camera-description string in the figcaption, not by the drawing. That pushed the
+     showing page into horizontal scroll at 320px in English and across the ENTIRE phone
+     band in Danish, whose compass words are longer. min-width:0 lets the text wrap. */
+  .plan { margin: 0; flex: 0 1 auto; min-width: 0; max-width: 100%; }
 
   .plan svg { display: block; max-width: 100%; height: auto; color: var(--ink-tertiary); }
 

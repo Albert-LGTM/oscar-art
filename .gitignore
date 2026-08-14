@@ -6,8 +6,12 @@ dist/
 # `npm run build:media`. Real documentation replaces public/media/ in Phase 0 and
 # SHOULD then be tracked (or held in object storage and synced) — at which point
 # remove the first line below and keep ignoring only derived/.
-public/media/
+# public/media/ IS TRACKED: it holds the artist's actual documentation, which is the
+# content of the archive and must be versioned with it. Only the generated derivatives
+# and social cards are ignored — those are reproducible from the originals by
+# `npm run build:media` and `npm run build:social`.
 public/media/derived/
+public/media/social/
 # public/.assetsignore is tracked ON PURPOSE — it keeps public/ present in a fresh
 # clone. Without a tracked file in it, git omits the directory entirely and Wrangler's
 # Astro setup fails on a missing path. Do not add `public/` here.

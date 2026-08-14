@@ -32,8 +32,10 @@ const FORBIDDEN_IN_PLATE = [
   { re: /\bmix-blend-mode\s*:(?!\s*normal)/i, why: 'a blend mode recomputes the artwork\'s pixels against the page.' },
   { re: /\bclip-path\s*:(?!\s*none)/i, why: 'clip-path is a crop.' },
   { re: /\baspect-ratio\s*:/i, why: 'the aspect ratio comes from the image\'s own width/height, not from CSS.' },
-  { re: /\btransform\s*:\s*[^;]*scale/i, why: 'scaling a plate changes its reproduction size against the caption\'s stated dimensions.' },
+  { re: /\btransform\s*:(?!\s*none)/i, why: 'any transform moves, scales or skews the work away from how it was photographed.' },
   { re: /\bopacity\s*:\s*0?\.\d/i, why: 'a partially transparent artwork is composited against the page ground.' },
+  { re: /\bborder-radius\s*:(?!\s*0)/i, why: 'rounding the corners of a photograph crops it, however slightly.' },
+  { re: /\bbox-shadow\s*:(?!\s*none)/i, why: 'a shadow is a frame, and a frame is a design decision about the work.' },
 ]
 
 /** Banned on any <img> anywhere, not only inside a plate — an index thumbnail is still

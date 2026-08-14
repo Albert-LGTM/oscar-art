@@ -39,6 +39,32 @@ import { site } from '../../lib/site'
  */
 export async function getStaticPaths() {
   const records = await getAssetRecords()
+
+  /*
+   * Asset ids must be globally unique, and nothing else enforces it.
+   *
+   * The route param IS the id. Two assets sharing one — trivially easy when copying a
+   * showing file — makes Astro emit two pages at the same path and keep the last. The
+   * result is a live /inspect/ URL showing a DIFFERENT artwork than its caption and
+   * JSON-LD describe, with every guard in the pipeline still green: the semantics lint
+   * passes (the page is well-formed), the link checker passes (the URL resolves), and
+   * the colour assertion passes (the file is fine). Only the meaning is wrong.
+   *
+   * Throwing here fails the build loudly, which is what every other archive guarantee
+   * already assumes.
+   */
+  const seen = new Map<string, string>()
+  for (const r of records) {
+    const prior = seen.get(r.asset.id)
+    if (prior) {
+      throw new Error(
+        `Duplicate asset id "${r.asset.id}" — used by both ${prior} and ` +
+        `${r.showing?.id ?? r.work.id}. Asset ids are /inspect/ URLs and must be unique.`,
+      )
+    }
+    seen.set(r.asset.id, r.showing?.id ?? r.work.id)
+  }
+
   return records.map((record) => ({ params: { asset: record.asset.id }, props: { record } }))
 }
 
@@ -62,11 +88,13 @@ const caption = buildCaption({
   yearEnd: work.data.yearEnd,
   materials: work.data.materials,
   aiUse: work.data.aiUse,
-  dimensions: showing.data.asInstalledDimensions ?? work.data.dimensions,
+  dimensions: showing?.data.asInstalledDimensions ?? work.data.dimensions,
   role: asset.role,
-  venueName: titleOf(venue.data.name),
-  city: venue.data.city,
-  dates: showing.data.dates,
+  // Absent when the showing is not yet established. The caption simply omits the venue
+  // and dates rather than inventing them.
+  venueName: venue ? titleOf(venue.data.name) : undefined,
+  city: venue?.data.city,
+  dates: showing?.data.dates,
   credit: asset.credit,
   resolveName,
 }, locale)
@@ -118,7 +146,7 @@ const megapixels = ((file.width * file.height) / 1e6).toFixed(1)
 
       <aside class="inspect__record">
         {/* An h1, because this is still a page someone lands on and has to orient in. */}
-        <h1 class="inspect__title">{titleOf(work.data.title)}</h1>
+        <h1 class="inspect__title" lang={work.data.title.lang}>{titleOf(work.data.title)}</h1>
         <p class="inspect__caption">{citation}</p>
 
         {/*
@@ -136,9 +164,11 @@ const megapixels = ((file.width * file.height) / 1e6).toFixed(1)
 
         <nav class="inspect__links" aria-label="Back to the record">
           <a href={file.src} download>Original file, untransformed</a>
-          <a href={routes.showing(work.id, showing.data.slug, 'en')}>
-            {titleOf(venue.data.name)}, {formatDateRange(showing.data.dates, 'en')}
-          </a>
+          {showing && venue ? (
+            <a href={routes.showing(work.id, showing.data.slug, 'en')}>
+              {titleOf(venue.data.name)}, {formatDateRange(showing.data.dates, 'en')}
+            </a>
+          ) : null}
           <a href={routes.work(work.id, 'en')}>{titleOf(work.data.title)}</a>
         </nav>
 
@@ -186,7 +216,7 @@ const megapixels = ((file.width * file.height) / 1e6).toFixed(1)
     margin: 0 auto;
     padding: var(--space-5) clamp(1rem, 4vw, 2rem) var(--space-7);
     font: var(--type-meta);
-    color: oklch(88% 0 0);
+    color: oklch(92% 0 0);
   }
 
   .inspect__title { font: var(--type-title); color: oklch(97% 0 0); margin-bottom: var(--space-2); font-style: italic; }
@@ -198,13 +228,13 @@ const megapixels = ((file.width * file.height) / 1e6).toFixed(1)
     gap: var(--space-1) var(--space-4);
     margin-bottom: var(--space-4);
   }
-  .inspect__facts dt { color: oklch(72% 0 0); }
+  .inspect__facts dt { color: oklch(91% 0 0); }
   .inspect__facts dd { margin: 0; }
 
   .inspect__links { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-4); }
   .inspect__links a { min-height: 24px; display: inline-block; }
 
-  .inspect__caveat { color: oklch(72% 0 0); }
+  .inspect__caveat { color: oklch(91% 0 0); }
 
   :where(.inspect) a { color: inherit; }
   :where(.inspect) a:focus-visible { outline: 2px solid oklch(97% 0 0); outline-offset: 3px; }

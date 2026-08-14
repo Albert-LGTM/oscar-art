@@ -3,10 +3,12 @@ node_modules
 dist
 .astro
 
-# Generated inside the image. Copying host-generated media in would bypass the ingest
-# pipeline and its colour assertion — which is exactly the silent failure the whole
-# image-handling design exists to prevent.
-public/media
+# public/media/ is the ARCHIVE now — Oscar's actual photographs — so it must be copied in.
+# It previously held only generated placeholders, which is why it was excluded. The
+# DERIVATIVES stay out: those are rebuilt inside the image so the colour assertion runs
+# against files this build produced, not files a laptop produced.
+public/media/derived
+public/media/social
 
 # Generated from Caddyfile.template by scripts/gen-csp.mjs during the build. Copying a
 # host copy in would ship stale CSP hashes, which blocks the site's own scripts.

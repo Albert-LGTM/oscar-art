@@ -93,10 +93,21 @@ for (const file of pages) {
     }
   }
 
-  // 6. Every <img> must carry an alt ATTRIBUTE. An explicit alt="" is legitimate for a
-  //    decorative image; a MISSING attribute is always a defect.
+  /*
+   * 6. Every <img> must carry an alt ATTRIBUTE. An explicit empty alt is legitimate for
+   *    a decorative image; a MISSING attribute is always a defect.
+   *
+   *    The attribute may be present WITHOUT a value: Astro serialises alt="" as a bare
+   *    `alt`, and in HTML5 a valueless attribute has the empty string as its value, so
+   *    `<img alt>` and `<img alt="">` are the same document. The first version of this
+   *    check tested for the substring `alt=` and therefore reported four real,
+   *    correctly-marked-up decorative thumbnails as an accessibility failure.
+   *
+   *    Matching on a word boundary followed by `=`, whitespace or `>` also keeps
+   *    `data-alt` or `data-alternate` from satisfying the check.
+   */
   const imgs = html.match(/<img\b[^>]*>/gi) ?? []
-  const noAlt = imgs.filter((tag) => !/\balt=/.test(tag))
+  const noAlt = imgs.filter((tag) => !/\salt(\s*=|[\s/>])/i.test(tag))
   if (noAlt.length > 0) fail(`${noAlt.length} <img> without an alt attribute`)
 
   // 7. Every <img> must carry intrinsic dimensions, or the box cannot be reserved
@@ -104,7 +115,21 @@ for (const file of pages) {
   const noDims = imgs.filter((tag) => !/\bwidth=/.test(tag) || !/\bheight=/.test(tag))
   if (noDims.length > 0) fail(`${noDims.length} <img> without width/height`)
 
-  // 8. Artwork must never be the only thing carrying meaning inside a canvas.
+  // 8. A literal "undefined" / "null" / "NaN" in shipped output is always a defect —
+  //    an interpolation that lost its value. It reached the <title>, the OG title and a
+  //    JSON-LD dateCreated before this check existed, and none of the other guards
+  //    could see it because the markup was perfectly well-formed.
+  for (const token of ['undefined', 'NaN']) {
+    const re = new RegExp(`(^|[>"\\s,:])${token}([<"\\s,.]|$)`)
+    const inText = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/g, '')
+    if (re.test(inText)) fail(`the literal "${token}" appears in output — a lost interpolation`)
+    // JSON-LD is stripped above, so check it separately and precisely.
+    for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+      if (m[1].includes(`"${token}"`)) fail(`JSON-LD asserts "${token}" as a value`)
+    }
+  }
+
+  // 9. Artwork must never be the only thing carrying meaning inside a canvas.
   if (/<canvas\b/i.test(html)) fail('a <canvas> element is present — no core content may live in canvas')
 }
 

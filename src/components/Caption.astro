@@ -117,7 +117,9 @@ const tail = afterTitle ? `, ${afterTitle}` : ''
     font: var(--type-meta);
     color: var(--ink-secondary);
     background: none;
-    border: 1px solid var(--rule);
+    /* --rule measured 1.60:1 against the page ground; --rule-strong is 4.49:1.
+       The border is this control's only affordance, so 1.4.11 applies to it. */
+    border: 1px solid var(--rule-strong);
     padding: 0.35em 0.7em;
     cursor: pointer;
     /* 2.5.8 Target Size (Minimum) is 24 × 24 CSS px at AA — note, not 44. */

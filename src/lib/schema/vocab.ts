@@ -104,6 +104,10 @@ export type DocumentRole = (typeof DOCUMENT_ROLES)[number]
  * recorded as destroyed would turn the archive into a mood.
  */
 export const EXISTENCE_STATUS = [
+  // The archive must be able to say "we have not established this". Every other value
+  // asserts a fact about the work's survival; forcing a guess in order to satisfy an
+  // enum is how a catalogue record becomes fiction.
+  'not-recorded',
   'extant',              // still exists, installed or in storage as a complete work
   'de-installed',        // taken down; components retained; re-stageable
   'restageable',         // exists as instructions/certificate; materials re-acquired per showing
@@ -219,6 +223,7 @@ export const VIDEO_ROLE_LABEL: Record<VideoRole, L> = {
 }
 
 export const EXISTENCE_STATUS_LABEL: Record<ExistenceStatus, L> = {
+  'not-recorded': { en: 'Not yet recorded', da: 'Endnu ikke registreret' },
   extant: { en: 'Extant', da: 'Bevaret' },
   'de-installed': { en: 'De-installed; components retained', da: 'Nedtaget; elementer bevaret' },
   restageable: { en: 'Re-stageable from instructions', da: 'Kan genopføres efter anvisning' },

@@ -1,11 +1,14 @@
 ---
 import Base from '../../../layouts/Base.astro'
+import Plate from '../../../components/Plate.astro'
+import Caption from '../../../components/Caption.astro'
 import StructuredData from '../../../components/StructuredData.astro'
 import { LOCALES, type Locale, resolveTranslated, title as titleOf, gloss } from '../../../lib/i18n'
 import { routes, segment } from '../../../lib/routes'
-import { getWorkRecords, type WorkRecord } from '../../../lib/query'
+import { getWorkRecords, nameResolver, keyImageFor, type WorkRecord } from '../../../lib/query'
 import { formatDateRange, formatDimensions, formatArea, formatLength } from '../../../lib/format'
-import { EXISTENCE_STATUS_LABEL, LIGHT_CONDITION_LABEL, SHOWING_KIND_LABEL } from '../../../lib/schema/vocab'
+import { EXISTENCE_STATUS_LABEL, LIGHT_CONDITION_LABEL, SHOWING_KIND_LABEL, IMAGE_ROLE_LABEL, IMAGE_ROLES } from '../../../lib/schema/vocab'
+import { SIZES } from '../../../lib/image'
 import { ui, t } from '../../../lib/site'
 
 /**
@@ -36,7 +39,23 @@ const locale = Astro.params.locale as Locale
 const { record } = Astro.props
 const w = record.entry.data
 
+const resolveName = await nameResolver()
 const workTitle = titleOf(w.title)
+
+// Documentation whose showing is not yet established. Ordered by role, exactly as a
+// showing's documentation is — the sequence is the same argument either way.
+const roleRank = new Map(IMAGE_ROLES.map((r, i) => [r, i]))
+const unplaced = w.assets
+  .filter((a): a is Extract<typeof a, { kind: 'image' }> => a.kind === 'image')
+  .sort((a, b) => {
+    const byRole = (roleRank.get(a.role) ?? 99) - (roleRank.get(b.role) ?? 99)
+    return byRole !== 0 ? byRole : (a.sequence ?? 99) - (b.sequence ?? 99)
+  })
+// Same resolver as the frontispiece and the contact sheet, so a work cannot present one
+// image on the index and a different one in a forwarded link's preview. The hand-rolled
+// version here also preferred work-level documentation OVER a showing's establishing
+// view, which is backwards from every other surface.
+const socialAsset = keyImageFor(record)?.asset.id
 const workGloss = gloss(w.title, locale)
 
 const statement = resolveTranslated(w.statementOfSignificance, locale)
@@ -56,12 +75,18 @@ const dims = formatDimensions(w.dimensions, locale)
 const roomed = record.showings.filter((s) => s.entry.data.space?.roomWidthM && s.entry.data.space?.roomDepthM)
 const maxSpan = Math.max(1, ...roomed.map((s) => Math.max(s.entry.data.space!.roomWidthM!, s.entry.data.space!.roomDepthM!)))
 const PX_PER_M = 92 / maxSpan
+
+// The year is optional now, so the document title must be COMPOSED rather than
+// interpolated. `${undefined}` rendered a literal "undefined" into the browser tab, the
+// search result and the Open Graph title — three places a curator sees before the page.
+const documentTitle = w.year !== undefined ? `${workTitle}, ${w.year}` : workTitle
 ---
 
 <Base
   locale={locale}
-  title={`${workTitle}, ${w.year}`}
+  title={documentTitle}
   description={statement.value ?? materials.value ?? undefined}
+  socialAsset={socialAsset}
 >
   <StructuredData slot="head" locale={locale} work={record} />
   <article class="shell record">
@@ -69,7 +94,7 @@ const PX_PER_M = 92 / maxSpan
       <h1>
         <cite lang={w.title.lang}>{workTitle}</cite>
         {record.isLost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
-        <span class="record__year">{w.year}</span>
+        <span class="record__year">{w.year ?? (locale === 'da' ? 'År ikke registreret' : 'Year not recorded')}</span>
       </h1>
       {workGloss ? <p class="record__gloss" lang={locale}>{workGloss}</p> : null}
 
@@ -113,6 +138,43 @@ const PX_PER_M = 92 / maxSpan
         <h2 id="stmt-h">{t(ui.statement, locale)}</h2>
         <p class="record__prose">{statement.value}</p>
         {statement.status === 'fallback' ? <p class="fallback-note">{t(ui.fallbackNotice, locale)}</p> : null}
+      </section>
+    ) : null}
+
+    {/* ── Documentation whose showing is not yet established ───────────────── */}
+    {unplaced.length > 0 ? (
+      <section class="record__docs" aria-labelledby="docs-h">
+        <h2 id="docs-h" class="sr-only">{locale === 'da' ? 'Dokumentation' : 'Documentation'}</h2>
+        {/*
+          Stated plainly rather than glossed over. These photographs are real evidence of
+          a real work; what is missing is the record of WHERE and WHEN they were made.
+          Naming that gap is what separates an archive from a portfolio — and it is the
+          precise thing the artist needs to supply for these images to move onto a
+          showing, which is where installation documentation belongs.
+        */}
+        <p class="record__gap measure">
+          {locale === 'da'
+            ? 'Opførelsen er endnu ikke registreret for denne dokumentation — sted, datoer og fotograf mangler. Billederne flyttes til den rette opførelse, så snart oplysningerne foreligger.'
+            : 'The showing for this documentation is not yet recorded — venue, dates and photographer are missing. These images move onto the showing record as soon as those are established.'}
+        </p>
+
+        {unplaced.map((img, i) => (
+          <div class="record__plate">
+            <p class="record__role">{t(IMAGE_ROLE_LABEL[img.role], locale)}</p>
+            <Plate asset={img} locale={locale} sizes={SIZES.record} priority={i === 0} />
+            <Caption
+              locale={locale}
+              caption={{
+                title: w.title, year: w.year, yearEnd: w.yearEnd,
+                materials: w.materials, aiUse: w.aiUse,
+                dimensions: w.dimensions, role: img.role,
+                credit: img.credit, resolveName,
+              }}
+              declareColour={{ profile: img.file.colourProfile, width: img.file.width, height: img.file.height, href: img.file.src }}
+            />
+            <p class="record__inspect"><a href={routes.inspect(img.id)}>{t(ui.inspect, locale)}</a></p>
+          </div>
+        ))}
       </section>
     ) : null}
 
@@ -243,6 +305,12 @@ const PX_PER_M = 92 / maxSpan
   .record__count { font: var(--type-meta); text-transform: none; letter-spacing: 0; color: var(--ink-tertiary); }
   .record__prose { margin-top: var(--space-3); }
   .record__reviewed { font: var(--type-meta); color: var(--ink-tertiary); margin-top: var(--space-6); }
+
+  .record__docs { display: grid; gap: var(--space-7); margin: var(--space-6) 0; }
+  .record__gap { font: var(--type-caption); color: var(--ink-secondary); }
+  .record__plate { display: grid; gap: var(--space-3); }
+  .record__role { font: var(--type-meta); color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .record__inspect { font: var(--type-meta); }
 
   .spec { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: var(--space-2) var(--space-4); margin-top: var(--space-3); font: var(--type-caption); }
   .spec dt { font: var(--type-meta); color: var(--ink-tertiary); }

@@ -78,12 +78,16 @@ const captionFor = (img: (typeof ordered)[number]) => ({
 })
 
 const otherShowings = record.showings.filter((o) => o.entry.data.slug !== s.slug)
+
+// This showing's own establishing view — the room as it actually was.
+const socialAsset = (viewpoints[0] ?? ordered[0])?.id
 ---
 
 <Base
   locale={locale}
   title={`${workTitle} — ${venueName}, ${s.dates.start.slice(0, 4)}`}
   description={resolveTranslated(w.statementOfSignificance, locale).value ?? undefined}
+  socialAsset={socialAsset}
 >
   <StructuredData slot="head" locale={locale} work={record} showing={showing} />
   <article class="shell showing">

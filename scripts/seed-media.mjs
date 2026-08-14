@@ -11,32 +11,14 @@
  * Dimensions are read from the content JSON rather than hard-coded, so a placeholder
  * can never silently disagree with the metadata the site publishes about it.
  */
-import { readdir, readFile, mkdir } from 'node:fs/promises'
+import { mkdir, access } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { declaredImages } from './lib/declared-images.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const showingsDir = join(root, 'src/content/showings')
 const outDir = join(root, 'public/media')
-
-/** Collect every declared image, with its exact declared dimensions. */
-async function declaredImages() {
-  const files = await readdir(showingsDir)
-  const out = []
-  for (const f of files.filter((f) => f.endsWith('.json'))) {
-    const data = JSON.parse(await readFile(join(showingsDir, f), 'utf8'))
-    for (const a of data.assets ?? []) {
-      if (a.kind === 'image') {
-        out.push({ src: a.file.src, width: a.file.width, height: a.file.height, role: a.role })
-      }
-      if (a.kind === 'video' && a.poster) {
-        out.push({ src: a.poster.src, width: a.poster.width, height: a.poster.height, role: 'poster' })
-      }
-    }
-  }
-  return out
-}
 
 /** A neutral field with a visible label. Deliberately ugly: a placeholder that looks
  *  like a photograph invites someone to forget it is one. */
@@ -57,9 +39,22 @@ function svgFor({ src, width, height, role }) {
 const images = await declaredImages()
 await mkdir(outDir, { recursive: true })
 
+let seeded = 0
+let kept = 0
+
 for (const img of images) {
   const target = join(outDir, img.src.replace(/^\/media\//, ''))
   await mkdir(dirname(target), { recursive: true })
+
+  // NEVER overwrite a real file. Real documentation now lives alongside placeholders,
+  // and this script runs on every container build — without this guard it would quietly
+  // replace the artist's photographs with grey rectangles, and the only visible symptom
+  // would be that the work looked wrong.
+  try {
+    await access(target)
+    kept++
+    continue
+  } catch { /* absent — safe to seed */ }
   await sharp(svgFor(img))
     .jpeg({ quality: 92, chromaSubsampling: '4:4:4' })
     // Written explicitly rather than relying on a default. sharp strips metadata and
@@ -67,7 +62,7 @@ for (const img of images) {
     // asserted fact rather than an accident.
     .withIccProfile('srgb')
     .toFile(target)
-  console.log(`seeded ${img.src} (${img.width}×${img.height})`)
+  seeded++
 }
 
-console.log(`\n${images.length} placeholder sources written to public/media/`)
+console.log(`\n${seeded} placeholder(s) written, ${kept} real file(s) left untouched.`)

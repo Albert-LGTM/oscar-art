@@ -1,16 +1,24 @@
 ---
+import Plate from './Plate.astro'
 import { resolveTranslated, title as titleOf, type Locale } from '../lib/i18n'
 import { routes } from '../lib/routes'
-import type { WorkRecord } from '../lib/query'
+import { keyImageFor, type WorkRecord } from '../lib/query'
+import { SIZES } from '../lib/image'
 import { EXISTENCE_STATUS_LABEL, LOST_STATUSES } from '../lib/schema/vocab'
 import { ui, t } from '../lib/site'
 
 /**
- * The contact sheet — metadata BEFORE media.
+ * The contact sheet — a small plate, then the facts.
  *
- * A curator scans twenty works in the time two would take to load, so the index leads
+ * A curator scans twenty works in the time two would take to load, so the row leads
  * with facts: title, year, materials, existence status, showing count. Density is
  * respect for the priority audience, not austerity for its own sake.
+ *
+ * But density is not the same as text-only. This index shipped with NO images at all,
+ * which for an installation practice is the Other Circle failure the research named
+ * exactly — "25 works as 25 collapsed text rows is a filing cabinet, not a portfolio".
+ * The thumbnail is small and colour-managed, at native aspect like every other plate,
+ * and it never replaces a single field of metadata.
  *
  * Extracted so the works index and every filtered facet view render through ONE
  * component. Two copies of a list is two places for the dagger, the status vocabulary
@@ -18,26 +26,58 @@ import { ui, t } from '../lib/site'
  */
 interface Props { locale: Locale; records: WorkRecord[] }
 const { locale, records } = Astro.props
+
+const keyed = records.map((r) => ({ record: r, key: keyImageFor(r) }))
+
+// Reserve the thumbnail gutter for the whole sheet when ANY row has an image, so rows
+// keep a common left edge. Works still awaiting documentation show an empty mat rather
+// than shifting their neighbours' text sideways.
+const anyThumb = keyed.some((k) => k.key)
 ---
 
 {records.length === 0 ? (
   <p class="sheet__empty">{locale === 'da' ? 'Ingen værker matcher.' : 'No works match.'}</p>
 ) : (
   <ol class="sheet">
-    {records.map((r) => {
+    {keyed.map(({ record: r, key }) => {
       const lost = LOST_STATUSES.includes(r.entry.data.existenceStatus)
       const materials = resolveTranslated(r.entry.data.materials, locale).value
       return (
         <li>
           <a data-astro-prefetch href={routes.work(r.entry.id, locale)}>
-            <span class="sheet__title">
-              <cite lang={r.entry.data.title.lang}>{titleOf(r.entry.data.title)}</cite>
-              {lost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
+            {/*
+              The thumbnail is passed as DECORATIVE here, and that is an accessibility
+              decision rather than a shortcut. The image sits inside the link, and the
+              link already carries the title, year, materials and status as real text —
+              so a described alt would make every row announce its full record twice
+              before a screen-reader user reached the next one (WCAG technique H2). The
+              described alt is authored once and read where it does work: the record page
+              and the inspection route.
+
+              Note this passes DATA to Plate, not a styling override. Plate still refuses
+              every crop, filter and aspect change; the mat contract is untouched.
+            */}
+            {anyThumb ? (
+              <span class="sheet__thumb">
+                {key ? (
+                  <Plate
+                    asset={{ ...key.asset, alt: { ...key.asset.alt, decorative: true } }}
+                    locale={locale}
+                    sizes={SIZES.thumb}
+                  />
+                ) : null}
+              </span>
+            ) : null}
+            <span class="sheet__meta">
+              <span class="sheet__title">
+                <cite lang={r.entry.data.title.lang}>{titleOf(r.entry.data.title)}</cite>
+                {lost ? <abbr class="dagger" title={t(ui.daggerMeaning, locale)}>†</abbr> : null}
+              </span>
+              <span class="sheet__year">{r.entry.data.year ?? '—'}</span>
+              <span class="sheet__materials">{materials}</span>
+              <span class="sheet__status">{t(EXISTENCE_STATUS_LABEL[r.entry.data.existenceStatus], locale)}</span>
+              <span class="sheet__count">{ui.showingsCount[locale](r.showings.length)}</span>
             </span>
-            <span class="sheet__year">{r.entry.data.year}</span>
-            <span class="sheet__materials">{materials}</span>
-            <span class="sheet__status">{t(EXISTENCE_STATUS_LABEL[r.entry.data.existenceStatus], locale)}</span>
-            <span class="sheet__count">{ui.showingsCount[locale](r.showings.length)}</span>
           </a>
         </li>
       )
@@ -47,14 +87,34 @@ const { locale, records } = Astro.props
 
 <style>
   .sheet { display: grid; gap: 0; }
+
+  /*
+   * Two levels, deliberately. The row is a flex line so the plate can sit at the top of
+   * its own column at native aspect, while the metadata keeps the BASELINE grid it had
+   * before — a replaced element in a baseline-aligned grid aligns by its bottom edge and
+   * would drag every label in the row down with it.
+   */
   .sheet a {
-    display: grid;
-    grid-template-columns: minmax(12rem, 2fr) 4rem minmax(10rem, 3fr) minmax(8rem, 1fr) auto;
+    display: flex;
     gap: var(--space-4);
-    align-items: baseline;
+    align-items: flex-start;
     padding: var(--space-3) 0;
     text-decoration: none;
   }
+
+  /* `flex: 0 0` fixes the gutter; `min-width: 0` on the sibling is what stops a long
+     Danish materials string from overflowing the row rather than wrapping. */
+  .sheet__thumb { flex: 0 0 7rem; }
+
+  .sheet__meta {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(10rem, 2fr) 4rem minmax(9rem, 3fr) minmax(8rem, 1fr) auto;
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+
   .sheet a:hover cite { text-decoration: underline; }
   .sheet__title cite { font-style: italic; font: var(--type-body); }
   .sheet__year, .sheet__materials, .sheet__status, .sheet__count {
@@ -63,6 +123,8 @@ const { locale, records } = Astro.props
   .sheet__empty { font: var(--type-caption); color: var(--ink-tertiary); }
 
   @media (max-width: 48rem) {
-    .sheet a { grid-template-columns: 1fr; gap: var(--space-1); padding: var(--space-4) 0; }
+    .sheet__thumb { flex-basis: 5rem; }
+    .sheet__meta { grid-template-columns: 1fr; gap: var(--space-1); }
+    .sheet a { padding: var(--space-4) 0; }
   }
 </style>

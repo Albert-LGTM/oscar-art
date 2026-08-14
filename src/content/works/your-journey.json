@@ -1,0 +1,130 @@
+{
+  "title": {
+    "original": "Your Journey",
+    "lang": "en"
+  },
+  "materials": {},
+  "dimensions": {
+    "variable": true
+  },
+  "existenceStatus": "not-recorded",
+  "state": "public",
+  "featured": true,
+  "featuredRank": 2,
+  "assets": [
+    {
+      "id": "yj-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": {
+        "src": "/media/yj-01.jpg",
+        "width": 915,
+        "height": 608,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Living turf laid directly on a dark wooden floor in the shape of a route arrow \u2014 the kind drawn on a map. The band of grass runs in from the upper left, turns back on itself in a broad hairpin, and ends in an arrowhead pointing down and to the left. A small mirrored diamond lies flat on the turf where the path doubles back. Seen from above at an angle; the wooden boards run diagonally beneath.",
+          "da": "Levende gr\u00e6st\u00f8rv lagt direkte p\u00e5 et m\u00f8rkt tr\u00e6gulv i form af en rutepil \u2014 den slags, der tegnes p\u00e5 et kort. Gr\u00e6sb\u00e5ndet l\u00f8ber ind fra \u00f8verste venstre hj\u00f8rne, vender tilbage i et bredt h\u00e5rn\u00e5lesving og ender i en pilespids, der peger ned mod venstre. En lille spejlblank rude ligger fladt p\u00e5 t\u00f8rven, hvor ruten vender. Set skr\u00e5t oppefra; tr\u00e6gulvets br\u00e6dder l\u00f8ber diagonalt nedenunder."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "unknown",
+        "photoCreditKind": "by"
+      }
+    },
+    {
+      "id": "yj-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": {
+        "src": "/media/yj-02.jpg",
+        "width": 1080,
+        "height": 610,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Closer view along the turf arrow. The cut edges of the sod are clean and squared, and the grass has been mown in lighter and darker bands so that a second pattern runs through it. Low sunlight rakes across the boards between the bands of grass.",
+          "da": "N\u00e6rmere billede langs gr\u00e6spilen. T\u00f8rvens sk\u00e5rne kanter er rene og retvinklede, og gr\u00e6sset er sl\u00e5et i lysere og m\u00f8rkere b\u00e5nd, s\u00e5 et andet m\u00f8nster l\u00f8ber igennem det. Lavt sollys stryger hen over br\u00e6dderne mellem gr\u00e6sb\u00e5ndene."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "unknown",
+        "photoCreditKind": "by"
+      }
+    },
+    {
+      "id": "yj-03",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 3,
+      "file": {
+        "src": "/media/yj-03.jpg",
+        "width": 1080,
+        "height": 1576,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Upright view looking down across three bands of the turf arrow. A rectangular mirror lies flat on the middle band, reflecting the ceiling above as a pale rectangle. Late sunlight falls across the bare boards between the bands, throwing the shadow of grass blades onto the wood.",
+          "da": "St\u00e5ende billede set ned over tre af gr\u00e6spilens b\u00e5nd. Et rektangul\u00e6rt spejl ligger fladt p\u00e5 det midterste b\u00e5nd og gengiver loftet ovenover som et blegt rektangel. Sent sollys falder hen over de bare br\u00e6dder mellem b\u00e5ndene og kaster gr\u00e6sstr\u00e5enes skygger p\u00e5 tr\u00e6et."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "unknown",
+        "photoCreditKind": "by"
+      }
+    },
+    {
+      "id": "yj-04",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 4,
+      "file": {
+        "src": "/media/yj-04.jpg",
+        "width": 919,
+        "height": 608,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "A pale blue-grey plate lies flat on the turf at the left. A wide channel of bare wooden boards runs diagonally between two bands of grass, lit by low sun, with the shadows of grass blades falling across it.",
+          "da": "En lysebl\u00e5gr\u00e5 plade ligger fladt p\u00e5 t\u00f8rven til venstre. En bred rende af bare br\u00e6dder l\u00f8ber diagonalt mellem to gr\u00e6sb\u00e5nd, oplyst af lav sol, med gr\u00e6sstr\u00e5enes skygger hen over sig."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "unknown",
+        "photoCreditKind": "by"
+      }
+    },
+    {
+      "id": "yj-05",
+      "kind": "image",
+      "role": "detail",
+      "file": {
+        "src": "/media/yj-05.jpg",
+        "width": 1080,
+        "height": 718,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "A translucent frosted panel lying on grass in daylight. Sealed inside it is a printed document in yellow and grey-blue, with an ornate ruled border and dense lettering, resembling a banknote or certificate. The grass grows right up to the panel's edges.",
+          "da": "En halvgennemsigtig mat plade, der ligger p\u00e5 gr\u00e6s i dagslys. Indesluttet i den er et trykt dokument i gult og gr\u00e5bl\u00e5t med en ornamenteret ramme og t\u00e6t skrift, der minder om en pengeseddel eller et certifikat. Gr\u00e6sset vokser helt op til pladens kanter."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "unknown",
+        "photoCreditKind": "by"
+      }
+    }
+  ]
+}

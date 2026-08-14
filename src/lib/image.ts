@@ -48,7 +48,12 @@ export const SIZES = {
    */
   record:
     '(min-width: 84rem) 1160px, ' +
-    '(min-width: 48rem) calc(100vw - 184px), ' +
+    // 86vw, not `calc(100vw - 184px)`. The 184px constant assumed BOTH clamps at their
+    // maximum (2x48 shell + 2x44 mat), which only holds above ~1200px. Between 768 and
+    // 1344px the real chrome is 2x4vw + 2x3vw = 14vw, so the constant under-stated the
+    // box and the browser fetched a derivative SMALLER than the display size — meaning
+    // the artwork was being upscaled on exactly the widths a laptop uses.
+    '(min-width: 48rem) 86vw, ' +
     'calc(100vw - 64px)',
 
   /**

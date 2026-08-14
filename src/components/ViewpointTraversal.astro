@@ -58,9 +58,15 @@
 
     let active = -1
     let lastMove = 0
+    // Set while OUR OWN smooth scroll is in flight. Without it the IntersectionObserver
+    // fires for every plate the scroll passes through and drags the marker backwards
+    // across the whole sequence — the plan animating in the opposite direction to the
+    // movement that caused it.
+    let programmatic = false
+    let programmaticTimer: ReturnType<typeof setTimeout> | undefined
 
-    const setActive = (next: number, scroll = false) => {
-      if (next < 0 || next >= plates.length || next === active) return
+    const setActive = (next: number, scroll = false): boolean => {
+      if (next < 0 || next >= plates.length || next === active) return false
 
       // The riffle: holding an arrow key should flick through positions like loose
       // sheets, not queue 220ms animations behind each other.
@@ -75,6 +81,12 @@
       plan.setAttribute('data-active', String(next + 1))
 
       if (scroll) {
+        programmatic = true
+        clearTimeout(programmaticTimer)
+        // `scrollend` is not universally supported; the timer is the floor, not the plan.
+        programmaticTimer = setTimeout(() => { programmatic = false }, 500)
+        window.addEventListener('scrollend', () => { programmatic = false }, { once: true })
+
         plates[next]!.scrollIntoView({
           behavior: reduce.matches ? 'auto' : 'smooth',
           block: 'start',
@@ -84,16 +96,32 @@
         const h = plates[next]!.querySelector<HTMLElement>('[data-viewpoint-label]')
         h?.focus({ preventScroll: true })
       }
+      return true
     }
 
     // Scrolling is the primary driver: the plan reports where you are, unprompted.
+    // Membership, not latching: `active` previously kept the last value forever, so
+    // scrolling back to the top of the document left the plan asserting a viewpoint the
+    // reader was no longer anywhere near.
+    const inBand = new Set<HTMLElement>()
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (!e.isIntersecting) continue
-          const i = plates.indexOf(e.target as HTMLElement)
-          if (i >= 0) setActive(i)
+          const el = e.target as HTMLElement
+          if (e.isIntersecting) inBand.add(el)
+          else inBand.delete(el)
         }
+        if (programmatic) return
+
+        if (inBand.size === 0) {
+          active = -1
+          markers.forEach((m) => m.removeAttribute('data-active'))
+          plan.removeAttribute('data-active')
+          return
+        }
+        const lowest = Math.min(...[...inBand].map((el) => plates.indexOf(el)).filter((i) => i >= 0))
+        setActive(lowest)
       },
       { rootMargin: '-45% 0px -45% 0px', threshold: 0 },
     )
@@ -103,11 +131,20 @@
     // and capturing them is keyboard hijacking by the same logic that bans scroll
     // hijacking. Ignored while the caret is in a field or a modifier is held.
     document.addEventListener('keydown', (e) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return
+      // shiftKey included: without it, Shift+Arrow — the native gesture for EXTENDING a
+      // text selection — was swallowed, so a reader selecting the citation by keyboard
+      // was thrown to another viewpoint instead. A non-collapsed selection is likewise
+      // a signal that the reader is selecting text, not navigating.
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
+      if (!document.getSelection()?.isCollapsed) return
+
       const t = e.target as HTMLElement | null
       if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
-      if (e.key === 'ArrowRight') { e.preventDefault(); setActive(active + 1, true) }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); setActive(active - 1, true) }
+
+      // preventDefault ONLY when the traversal actually moves. At either end of the
+      // sequence the arrows previously did nothing while still blocking native scroll.
+      if (e.key === 'ArrowRight' && setActive(active + 1, true)) e.preventDefault()
+      if (e.key === 'ArrowLeft' && setActive(active - 1, true)) e.preventDefault()
     })
   }
 </script>

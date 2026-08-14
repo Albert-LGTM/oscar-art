@@ -35,6 +35,10 @@ RUN npm run seed:media
 # never upscaled past native, ICC written explicitly rather than inherited.
 RUN npm run build:media
 
+# Letterboxed 1200x630 link-preview cards. Generated from the same originals through the
+# same colour-managed pipeline, so a card carries the same guarantee as the page.
+RUN npm run build:social
+
 RUN npm run build
 
 # ── Guards. Each of these has been negative-tested; none is decorative. ──

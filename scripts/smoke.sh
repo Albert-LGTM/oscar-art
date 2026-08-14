@@ -12,6 +12,18 @@ set -uo pipefail
 BASE="${1:-http://localhost:8080}"
 pass=0; fail=0
 
+# DISCOVER a work rather than hardcoding one. The first version named a specific slug,
+# so deleting that placeholder made four checks fail against a site that was fine — the
+# test asserting the fixture instead of the behaviour.
+WORK_EN="$(curl -s "$BASE/en/works/" | grep -oE 'href="/en/works/[a-z0-9-]+/"' | grep -v '/by/' | head -1 | sed 's|href="||;s|"||')"
+WORK_SLUG="$(basename "${WORK_EN:-}")"
+WORK_DA="/da/vaerker/${WORK_SLUG}/"
+if [ -z "$WORK_SLUG" ]; then
+  printf '  \033[31m✗\033[0m no work records found at %s/en/works/ — the archive is empty\n' "$BASE"
+  exit 1
+fi
+printf 'Discovered work: %s\n\n' "$WORK_SLUG"
+
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; pass=$((pass+1)); }
 bad()  { printf '  \033[31m✗\033[0m %s\n' "$1"; fail=$((fail+1)); }
 
@@ -22,7 +34,7 @@ echo "Ståsted smoke test — $BASE"
 echo
 echo "Routes"
 for pair in "/:200" "/en/:200" "/da/:200" \
-            "/en/works/vertical-hold/:200" "/da/vaerker/vertical-hold/:200" \
+            "${WORK_EN}:200" "${WORK_DA}:200" \
             "/sitemap-index.xml:200"; do
   u="${pair%:*}"; want="${pair##*:}"; got="$(status "$u")"
   [ "$got" = "$want" ] && ok "$u → $got" || bad "$u → $got (expected $want)"
@@ -52,20 +64,21 @@ echo
 echo "Caching"
 c="$(header /en/ Cache-Control)"
 case "$c" in *must-revalidate*) ok "HTML revalidates" ;; *) bad "HTML Cache-Control: $c" ;; esac
-c="$(header /media/derived/vh-2022-01-1280.avif Cache-Control)"
+DERIV="$(curl -s "$BASE$WORK_EN" | grep -oE '/media/derived/[a-z0-9-]+\.avif' | head -1)"
+c="$(header "${DERIV:-/media/derived/none.avif}" Cache-Control)"
 case "$c" in *immutable*) ok "derivatives immutable" ;; *) bad "derivative Cache-Control: $c" ;; esac
 
 echo
 echo "Bilingual"
-if curl -s "$BASE/en/works/vertical-hold/" | grep -q 'hreflang="da"' &&
-   curl -s "$BASE/da/vaerker/vertical-hold/" | grep -q 'hreflang="en"'; then
+if curl -s "$BASE$WORK_EN" | grep -q 'hreflang="da"' &&
+   curl -s "$BASE$WORK_DA" | grep -q 'hreflang="en"'; then
   ok "hreflang is reciprocal on both sides of a record"
 else
   bad "hreflang is not reciprocal — search engines discard one-sided pairs"
 fi
 
 # The language toggle must land on the EQUIVALENT RECORD, never the homepage.
-if curl -s "$BASE/da/vaerker/vertical-hold/" | grep -q 'masthead__lang" href="/en/works/vertical-hold/"'; then
+if curl -s "$BASE$WORK_DA" | grep -q "masthead__lang\" href=\"$WORK_EN\""; then
   ok "language toggle lands on the equivalent record"
 else
   bad "language toggle does not preserve the record"
@@ -75,7 +88,7 @@ echo
 echo "Content integrity"
 # object-fit on artwork is the single most common way artist sites destroy installation
 # documentation. The build-time lint covers source; this covers what actually shipped.
-if curl -s "$BASE/en/works/vertical-hold/" | grep -qE 'object-fit|filter:[[:space:]]*(grayscale|sepia|saturate)'; then
+if curl -s "$BASE$WORK_EN" | grep -qE 'object-fit|filter:[[:space:]]*(grayscale|sepia|saturate)'; then
   bad "shipped CSS crops or filters artwork"
 else
   ok "no crop/filter reaches artwork in shipped CSS"
@@ -88,7 +101,9 @@ import re,sys,urllib.request
 base=sys.argv[1]
 html=urllib.request.urlopen(base+'/en/').read().decode()
 imgs=re.findall(r'<img\b[^>]*>',html)
-noalt=[i for i in imgs if 'alt=' not in i]
+# A bare `alt` is HTML5 for alt="" — Astro serialises it that way, and it is what a
+# decorative thumbnail correctly ships. Testing for the substring 'alt=' fails those.
+noalt=[i for i in imgs if not re.search(r'\salt(\s*=|[\s/>])',i)]
 nodim=[i for i in imgs if 'width=' not in i or 'height=' not in i]
 print(('  \033[32m✓\033[0m ' if not noalt else '  \033[31m✗\033[0m ') + f'{len(imgs)} img, {len(noalt)} without alt')
 print(('  \033[32m✓\033[0m ' if not nodim else '  \033[31m✗\033[0m ') + f'{len(imgs)} img, {len(nodim)} without width/height')

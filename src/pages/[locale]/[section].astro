@@ -47,18 +47,28 @@ const HEADING: Record<string, { en: string; da: string }> = {
 
 // Loaded lazily per section so an index route never pays for a collection it does not
 // render — the JS budget is a build-time discipline as much as a runtime one.
-const exhibitions = id === 'exhibitions' ? await getCollection('exhibitions', (e) => e.data.state === 'public') : []
-const venues = id === 'venues' ? await getCollection('venues', (v) => v.data.state === 'public') : []
-const texts = id === 'texts' ? await getCollection('texts', (x) => x.data.state === 'public').catch(() => []) : []
-const pressItems = id === 'press' ? await getCollection('press', (p) => p.data.state === 'public').catch(() => []) : []
-const cvEntries = id === 'about' ? await getCollection('cv').catch(() => []) : []
+//
+// Every read is wrapped: an EMPTY collection is a legitimate archival state (works
+// recorded before their venues and dates are known), and Astro throws rather than
+// returning []. Letting that throw would mean inventing a placeholder venue purely to
+// keep the build alive — the exact fabrication the content model exists to prevent.
+const pub = <T extends { data: { state?: string } }>(e: T) => e.data.state === 'public'
+const load = async <T,>(fn: () => Promise<T[]>): Promise<T[]> => {
+  try { return await fn() } catch { return [] }
+}
+
+const exhibitions = id === 'exhibitions' ? await load(() => getCollection('exhibitions', pub)) : []
+const venues = id === 'venues' ? await load(() => getCollection('venues', pub)) : []
+const texts = id === 'texts' ? await load(() => getCollection('texts', pub)) : []
+const pressItems = id === 'press' ? await load(() => getCollection('press', pub)) : []
+const cvEntries = id === 'about' ? await load(() => getCollection('cv')) : []
 
 const showingsByVenue = new Map<string, number>()
 if (id === 'venues') for (const s of showings) showingsByVenue.set(s.venue.id, (showingsByVenue.get(s.venue.id) ?? 0) + 1)
 
 const exhibitionVenue = new Map<string, string>()
 if (id === 'exhibitions') {
-  for (const v of await getCollection('venues')) exhibitionVenue.set(v.id, `${titleOf(v.data.name)}, ${v.data.city}`)
+  for (const v of await getCollection('venues').catch(() => [])) exhibitionVenue.set(v.id, `${titleOf(v.data.name)}, ${v.data.city}`)
 }
 
 const heading = t(HEADING[id]!, locale)
