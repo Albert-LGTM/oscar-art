@@ -80,7 +80,7 @@ export const MIME: Record<Format, string> = {
  *  by the source's own basename so a re-ingest is idempotent. */
 export function derivativePath(src: string, width: number, format: Format): string {
   const base = src.replace(/^\/media\//, '').replace(/\.[^.]+$/, '')
-  return `/media/derived/${base}-${width}.${format}`
+  return `/derived/${base}-${width}.${format}`
 }
 
 /** Widths actually available for a source, never exceeding its native width. */

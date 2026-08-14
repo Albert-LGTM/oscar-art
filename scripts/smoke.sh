@@ -64,8 +64,8 @@ echo
 echo "Caching"
 c="$(header /en/ Cache-Control)"
 case "$c" in *must-revalidate*) ok "HTML revalidates" ;; *) bad "HTML Cache-Control: $c" ;; esac
-DERIV="$(curl -s "$BASE$WORK_EN" | grep -oE '/media/derived/[a-z0-9-]+\.avif' | head -1)"
-c="$(header "${DERIV:-/media/derived/none.avif}" Cache-Control)"
+DERIV="$(curl -s "$BASE$WORK_EN" | grep -oE '/derived/[a-z0-9/-]+\.avif' | head -1)"
+c="$(header "${DERIV:-/derived/none.avif}" Cache-Control)"
 case "$c" in *immutable*) ok "derivatives immutable" ;; *) bad "derivative Cache-Control: $c" ;; esac
 
 echo

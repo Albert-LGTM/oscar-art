@@ -10,7 +10,7 @@ dist/
 # content of the archive and must be versioned with it. Only the generated derivatives
 # and social cards are ignored — those are reproducible from the originals by
 # `npm run build:media` and `npm run build:social`.
-public/media/derived/
+public/derived/
 public/media/social/
 # public/.assetsignore is tracked ON PURPOSE — it keeps public/ present in a fresh
 # clone. Without a tracked file in it, git omits the directory entirely and Wrangler's

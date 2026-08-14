@@ -102,7 +102,7 @@ for (const i of orphaned) {
   files += await rmIf(join(mediaDir, rel))
   files += await rmIf(join(mediaDir, 'social', `${i.id}.jpg`))
   // Derivatives are `<stem>-<width>.<format>` beside the stem, so glob the parent.
-  const derivedParent = join(mediaDir, 'derived', dirname(stem))
+  const derivedParent = join(root, 'public/derived', dirname(stem))
   const base = stem.split('/').pop()
   try {
     for (const f of await readdir(derivedParent)) {

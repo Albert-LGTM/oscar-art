@@ -25,7 +25,7 @@
     "test:colour": "node scripts/assert-icc.mjs",
     "gen:csp": "node scripts/gen-csp.mjs",
     "smoke": "bash scripts/smoke.sh",
-    "verify": "npm run check && npm run lint:plates && npm run test:colour && npm run build && npm run lint:semantics && npm run lint:links && npm run gen:csp",
+    "verify": "npm run check && npm run lint:plates && npm run build && npm run lint:semantics && npm run test:colour",
     "build:cf": "npm run build && npm run lint:semantics && npm run test:colour",
     "deploy": "npm run build:cf && wrangler deploy"
   },

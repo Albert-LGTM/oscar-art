@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const derivedDir = join(root, 'public/media/derived')
+const derivedDir = join(root, 'public/derived')
 
 /** What every derivative must carry. Widen deliberately if a Display-P3 path is added
  *  in Phase 0 — and double the CI assertions at the same time, not later. */
@@ -35,7 +35,7 @@ try {
  * RECURSIVE, not a flat listing.
  *
  * Derivatives mirror the source layout under /media/, so a source at
- * public/media/demo/x.jpg produces public/media/derived/demo/x-960.avif. A flat
+ * public/media/demo/x.jpg produces public/derived/demo/x-960.avif. A flat
  * `readdir` walked only the top level and reported "✓ 123 derivatives carry an sRGB
  * profile" while 201 files in a subdirectory went unchecked — a green tick asserting
  * colour fidelity over a third of the archive it had never opened.

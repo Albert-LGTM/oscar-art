@@ -26,7 +26,7 @@ import { declaredImages } from './lib/declared-images.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const mediaDir = join(root, 'public/media')
-const derivedDir = join(mediaDir, 'derived')
+const derivedDir = join(root, 'public/derived')
 
 const WIDTHS = [640, 960, 1280, 1600, 2000, 2400, 3200]
 
