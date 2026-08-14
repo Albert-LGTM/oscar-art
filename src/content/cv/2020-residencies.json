@@ -1,0 +1,13 @@
+{
+  "section": "residencies",
+  "year": 2020,
+  "title": {
+    "en": "Residency",
+    "da": "Ophold"
+  },
+  "city": "Malmö",
+  "country": "SE",
+  "includeInShortCv": false,
+  "demo": true,
+  "organisation": "Verkstad Nord"
+}

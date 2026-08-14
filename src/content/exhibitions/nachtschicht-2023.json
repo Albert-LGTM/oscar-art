@@ -1,0 +1,26 @@
+{
+  "title": {
+    "original": "Nachtschicht",
+    "lang": "en",
+    "gloss": {
+      "en": "Night Shift",
+      "da": "Nathold"
+    }
+  },
+  "type": "solo",
+  "venue": "halle-sieben",
+  "dates": {
+    "start": "2023-03-11",
+    "end": "2023-06-25",
+    "precision": "day"
+  },
+  "curators": [
+    "ida-lindqvist"
+  ],
+  "text": {
+    "en": "The first presentation of both rooms together, and the first time the long room was used at its full 22-metre length.",
+    "da": "Den første præsentation af begge rum sammen og første gang, det lange rum blev brugt i hele sin længde på 22 meter."
+  },
+  "demo": true,
+  "state": "public"
+}

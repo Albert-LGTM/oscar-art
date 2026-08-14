@@ -1,0 +1,192 @@
+{
+  "work": "nightshift",
+  "venue": "kunsthal-saltholm",
+  "slug": "2021-kunsthal-saltholm",
+  "dates": {
+    "start": "2021-11-26",
+    "end": "2022-01-09",
+    "precision": "day"
+  },
+  "kind": "first-realisation",
+  "space": {
+    "roomWidthM": 7.5,
+    "roomDepthM": 7.5,
+    "ceilingHeightM": 3.2,
+    "floorAreaM2": 56.3,
+    "dedicatedSpace": true,
+    "light": "blackout",
+    "soundIsolation": true,
+    "wallSurface": {
+      "en": "Black-painted plasterboard",
+      "da": "Sortmalede gipsplader"
+    },
+    "plan": {
+      "vertices": [
+        [
+          0,
+          0
+        ],
+        [
+          7.5,
+          0
+        ],
+        [
+          7.5,
+          7.5
+        ],
+        [
+          0,
+          7.5
+        ]
+      ],
+      "doorAt": [
+        0.8,
+        7.5
+      ],
+      "workFootprint": [
+        [
+          2.5,
+          2.5
+        ],
+        [
+          5.0,
+          2.5
+        ],
+        [
+          5.0,
+          5.0
+        ],
+        [
+          2.5,
+          5.0
+        ]
+      ],
+      "cameras": [
+        {
+          "sequence": 1,
+          "at": [
+            1.3,
+            6.8
+          ],
+          "bearingDeg": 35
+        },
+        {
+          "sequence": 2,
+          "at": [
+            6.5,
+            6.4
+          ],
+          "bearingDeg": 315
+        },
+        {
+          "sequence": 3,
+          "at": [
+            3.8,
+            1.0
+          ],
+          "bearingDeg": 180
+        }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "ns-2021-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": {
+        "src": "/media/demo/ns-2021-01.jpg",
+        "width": 2400,
+        "height": 1600,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A very dark diagram: a near-black volume against a dark grey wall, with a cool blue-grey vertical strip at the right and a barely visible standing figure.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et meget mørkt diagram: et næsten sort volumen mod en mørkegrå væg, med en kølig blågrå lodret stribe til højre og en knap synlig stående figur."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "unknown",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "caption": {
+        "en": "Installation view. Photographer not recorded.",
+        "da": "Installationsview. Fotograf ikke registreret."
+      },
+      "viewingDistanceM": 3.8
+    },
+    {
+      "id": "ns-2021-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": {
+        "src": "/media/demo/ns-2021-02.jpg",
+        "width": 1500,
+        "height": 2000,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A dark portrait-format diagram: a tall near-black block occupies the upper two thirds above a faint pool.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et mørkt diagram i portrætformat: en høj næsten sort blok optager de øverste to tredjedele over en svag sø."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "unknown",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "viewingDistanceM": 2.2
+    },
+    {
+      "id": "ns-2021-03",
+      "kind": "image",
+      "role": "detail",
+      "sequence": 3,
+      "file": {
+        "src": "/media/demo/ns-2021-03.jpg",
+        "width": 1800,
+        "height": 1800,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A square detail diagram, nearly black, with a cool blue-grey band at the left.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et kvadratisk detaljediagram, næsten sort, med et køligt blågråt bånd til venstre."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "unknown",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "caption": {
+        "en": "Time clock and card rack.",
+        "da": "Stempelur og kortholder."
+      }
+    }
+  ],
+  "press": [
+    "a-room-that-keeps-its-own-hours"
+  ],
+  "contributors": [
+    {
+      "contributor": "rasmus-thau",
+      "role": "media-technician"
+    }
+  ],
+  "notRecorded": {
+    "en": "Every image here misrepresents the colour. A camera white-balances sodium light towards grey; in the room nothing was grey, and red and brown were indistinguishable. This is the reason the work is recorded as destroyed rather than restageable.",
+    "da": "Alle billeder her gengiver farven forkert. Et kamera hvidbalancerer natriumlys mod gråt; i rummet var intet gråt, og rødt og brunt kunne ikke skelnes. Det er grunden til, at værket er registreret som destrueret og ikke som genopførligt."
+  },
+  "demo": true,
+  "state": "public",
+  "lastReviewedOn": "2024-09-30"
+}

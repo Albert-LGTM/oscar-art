@@ -1,6 +1,38 @@
 // @ts-check
 import { defineConfig, passthroughImageService } from 'astro/config'
 import sitemap from '@astrojs/sitemap'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+/**
+ * Slugs of every DEMONSTRATION record, read straight off disk.
+ *
+ * The sitemap filter is a pure function of the URL string — it runs before the content
+ * layer exists and cannot ask a collection whether a record is invented. So the config
+ * reads the JSON itself. It is the same data, one step earlier.
+ *
+ * This is belt AND braces on purpose. The pages already emit `noindex, nofollow`, which
+ * is the mechanism that actually keeps them out of an index; omitting them here as well
+ * stops us from actively *submitting* fabricated exhibition records to a search engine,
+ * which a sitemap does. Neither measure substitutes for the other: a sitemap omission
+ * alone does not prevent indexing of internally-linked pages.
+ */
+function demoSlugs() {
+  const out = new Set()
+  for (const dir of ['src/content/works', 'src/content/showings']) {
+    let files = []
+    try { files = readdirSync(dir) } catch { continue }
+    for (const f of files.filter((f) => f.endsWith('.json'))) {
+      try {
+        const data = JSON.parse(readFileSync(join(dir, f), 'utf8'))
+        if (data.demo === true) out.add(f.replace(/\.json$/, ''))
+      } catch { /* a malformed record fails the build elsewhere, loudly */ }
+    }
+  }
+  return out
+}
+
+const DEMO = demoSlugs()
 
 /**
  * Ståsted — Astro configuration.
@@ -106,7 +138,14 @@ export default defineConfig({
       // Viewpoints >= 2 are canonical to the showing (see src/lib/seo.ts). They are
       // excluded here *as well as* carrying a canonical link — a sitemap omission
       // alone does not prevent indexing of internally-linked pages.
-      filter: (page) => !/\/view\/(?!1\/)\d+\//.test(page),
+      filter: (page) => {
+        if (/\/view\/(?!1\/)\d+\//.test(page)) return false
+        // Matching a whole path segment, not a substring: a real work named
+        // "standing-water-ii" must not be dropped because a demo work is called
+        // "standing-water".
+        const segments = new URL(page).pathname.split('/').filter(Boolean)
+        return !segments.some((seg) => DEMO.has(seg))
+      },
       i18n: {
         defaultLocale: 'en',
         locales: { en: 'en', da: 'da' },

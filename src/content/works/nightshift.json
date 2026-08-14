@@ -1,0 +1,72 @@
+{
+  "title": {
+    "original": "Nightshift",
+    "lang": "en",
+    "gloss": {
+      "da": "Nathold"
+    }
+  },
+  "year": 2021,
+  "materials": {
+    "en": "Sodium vapour lamps, salvaged time clock, punch cards, steel shelving, blackout fabric",
+    "da": "Natriumlamper, genbrugt stempelur, stempelkort, stålreoler, mørklægningsstof"
+  },
+  "dimensions": {
+    "variable": false,
+    "heightCm": 240,
+    "widthCm": 320,
+    "depthCm": 180
+  },
+  "existenceStatus": "destroyed",
+  "existenceSource": "Confirmed by the artist, 14 January 2022, after water damage in storage.",
+  "existenceNote": {
+    "en": "The lamps were the work. When the store flooded they were the first thing to go, and nothing that survives reproduces the colour.",
+    "da": "Lamperne var værket. Da lageret blev oversvømmet, var de det første, der gik, og intet af det, der er tilbage, gengiver farven."
+  },
+  "statementOfSignificance": {
+    "en": "Nightshift lit a small room with the sodium lamps used in Danish warehouses before LED replacement, at the exact colour temperature at which the human eye stops distinguishing red from brown. A salvaged time clock stamped a card every eleven minutes for the length of the exhibition. The work is about the hours in which a building is worked in but not occupied, and it depended entirely on a light source that is no longer manufactured — which is why it can be described but not restaged.",
+    "da": "Nightshift belyste et lille rum med de natriumlamper, der blev brugt i danske lagerhaller før udskiftningen til LED, ved præcis den farvetemperatur hvor det menneskelige øje holder op med at skelne rødt fra brunt. Et genbrugt stempelur stemplede et kort hvert ellevte minut udstillingen igennem. Værket handler om de timer, hvor en bygning arbejdes i, men ikke bebos, og det afhang fuldstændig af en lyskilde, der ikke længere produceres — derfor kan det beskrives, men ikke genopføres."
+  },
+  "components": [
+    {
+      "en": "6 sodium vapour lamps, SON-T 70 W",
+      "da": "6 natriumlamper, SON-T 70 W"
+    },
+    {
+      "en": "Time clock, Isgus, c. 1974",
+      "da": "Stempelur, Isgus, ca. 1974"
+    }
+  ],
+  "technical": {
+    "minimumFloorAreaM2": 30,
+    "minimumCeilingHeightM": 3.2,
+    "light": "blackout",
+    "sound": "mono",
+    "soundIsolationRequired": true,
+    "powerDrawW": 620,
+    "dedicatedCircuits": 2,
+    "equipmentRequiredFromVenue": [
+      {
+        "en": "Full blackout, including light spill from adjacent rooms",
+        "da": "Fuld mørklægning, også for lysindfald fra tilstødende rum"
+      }
+    ],
+    "installCrewSize": 2,
+    "installDays": 1.5,
+    "visibility": "public"
+  },
+  "tags": [
+    "night-labour"
+  ],
+  "related": [
+    {
+      "work": "standing-water",
+      "relation": "follows"
+    }
+  ],
+  "demo": true,
+  "state": "public",
+  "featured": true,
+  "featuredRank": 3,
+  "lastReviewedOn": "2024-09-30"
+}

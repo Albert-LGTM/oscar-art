@@ -1,0 +1,15 @@
+{
+  "name": {
+    "original": "Kunsthal Saltholm",
+    "lang": "da"
+  },
+  "city": "København",
+  "country": "DK",
+  "kind": "kunsthal",
+  "visitingInfo": {
+    "en": "A purpose-built black box with full blackout and independent sound isolation.",
+    "da": "En specialbygget black box med fuld mørklægning og selvstændig lydisolering."
+  },
+  "demo": true,
+  "state": "public"
+}

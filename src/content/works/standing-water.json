@@ -1,0 +1,100 @@
+{
+  "title": {
+    "original": "Standing Water",
+    "lang": "en",
+    "gloss": {
+      "da": "Stillestående vand"
+    }
+  },
+  "year": 2019,
+  "yearEnd": "ongoing",
+  "materials": {
+    "en": "Water, galvanised steel trays, submersible pumps, fluorescent tube, timber, mains power",
+    "da": "Vand, galvaniserede stålbakker, dykpumper, lysstofrør, tømmer, netstrøm"
+  },
+  "dimensions": {
+    "variable": true,
+    "note": {
+      "en": "Footprint adapts to the room; the water surface is always a single continuous plane.",
+      "da": "Grundfladen tilpasses rummet; vandoverfladen er altid ét sammenhængende plan."
+    }
+  },
+  "existenceStatus": "restageable",
+  "existenceNote": {
+    "en": "The trays and pumps are in storage. The work exists as long as someone is willing to keep the water level.",
+    "da": "Bakkerne og pumperne står på lager. Værket findes, så længe nogen vil holde vandstanden."
+  },
+  "statementOfSignificance": {
+    "en": "Standing Water holds a shallow plane of water absolutely still in a room that is not still. Four submersible pumps run continuously to cancel the movement the building itself introduces — footfall, ventilation, the tram outside. The work is therefore not an object but a maintained condition, and it fails the moment the maintenance stops. Each realisation is measured against the room it is in: the plane grows or shrinks so that it always reads as one surface rather than several trays. What a visitor sees is a floor that has become level in a building that is not.",
+    "da": "Standing Water holder et lavt vandplan fuldstændig stille i et rum, der ikke er stille. Fire dykpumper kører uafbrudt for at ophæve den bevægelse, bygningen selv tilfører — fodtrin, ventilation, sporvognen udenfor. Værket er derfor ikke en genstand, men en vedligeholdt tilstand, og det ophører i samme øjeblik vedligeholdelsen gør. Hver opførelse måles mod det rum, den står i: planet vokser eller skrumper, så det altid læses som én flade og ikke som flere bakker. Det, en besøgende ser, er et gulv, der er blevet vandret i en bygning, der ikke er det."
+  },
+  "variability": {
+    "en": "The number of trays, the footprint and the pump count all follow the room. Fixed: the water depth (38 mm), the single fluorescent tube, and the rule that the plane must never be broken by a walkway.",
+    "da": "Antallet af bakker, grundfladen og antallet af pumper følger rummet. Fast: vanddybden (38 mm), det ene lysstofrør og reglen om, at planet aldrig må brydes af en gangbro."
+  },
+  "components": [
+    {
+      "en": "12–28 galvanised steel trays, 800 × 800 × 60 mm",
+      "da": "12–28 galvaniserede stålbakker, 800 × 800 × 60 mm"
+    },
+    {
+      "en": "4 submersible pumps, 12 V",
+      "da": "4 dykpumper, 12 V"
+    },
+    {
+      "en": "1 fluorescent tube, 1500 mm, 4000 K",
+      "da": "1 lysstofrør, 1500 mm, 4000 K"
+    },
+    {
+      "en": "Levelling timber sub-frame, built on site",
+      "da": "Afretningsramme i træ, bygget på stedet"
+    }
+  ],
+  "technical": {
+    "minimumFloorAreaM2": 18,
+    "minimumCeilingHeightM": 3.0,
+    "light": "low",
+    "sound": "silent",
+    "soundIsolationRequired": false,
+    "powerDrawW": 240,
+    "dedicatedCircuits": 1,
+    "equipmentSuppliedByArtist": [
+      {
+        "en": "Trays, pumps, tube, control box",
+        "da": "Bakker, pumper, rør, styreboks"
+      }
+    ],
+    "equipmentRequiredFromVenue": [
+      {
+        "en": "Level floor within 4 mm across the footprint",
+        "da": "Plant gulv inden for 4 mm over hele grundfladen"
+      },
+      {
+        "en": "Water access and a drain within 25 m",
+        "da": "Vandadgang og afløb inden for 25 m"
+      }
+    ],
+    "installCrewSize": 2,
+    "installDays": 2.5,
+    "notes": {
+      "en": "Levelling is the whole install. Budget a full day for the sub-frame alone.",
+      "da": "Afretningen er hele opsætningen. Sæt en hel dag af til rammen alene."
+    },
+    "visibility": "public"
+  },
+  "tags": [
+    "held-water",
+    "borrowed-light"
+  ],
+  "related": [
+    {
+      "work": "nightshift",
+      "relation": "precedes"
+    }
+  ],
+  "demo": true,
+  "state": "public",
+  "featured": true,
+  "featuredRank": 1,
+  "lastReviewedOn": "2024-11-02"
+}

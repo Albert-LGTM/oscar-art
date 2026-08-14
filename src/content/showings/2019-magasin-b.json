@@ -1,0 +1,200 @@
+{
+  "work": "standing-water",
+  "venue": "magasin-b",
+  "slug": "2019-magasin-b",
+  "dates": {
+    "start": "2019-04-05",
+    "end": "2019-05-18",
+    "precision": "day"
+  },
+  "kind": "first-realisation",
+  "asInstalledDimensions": {
+    "variable": false,
+    "heightCm": 8,
+    "widthCm": 320,
+    "depthCm": 320
+  },
+  "space": {
+    "roomWidthM": 6.4,
+    "roomDepthM": 9.2,
+    "ceilingHeightM": 3.4,
+    "floorAreaM2": 58.9,
+    "dedicatedSpace": false,
+    "light": "ambient",
+    "soundIsolation": false,
+    "wallSurface": {
+      "en": "Painted brick",
+      "da": "Malet murværk"
+    },
+    "floorSurface": {
+      "en": "Sealed concrete, falling 22 mm across the room",
+      "da": "Forseglet beton med et fald på 22 mm gennem rummet"
+    },
+    "plan": {
+      "vertices": [
+        [
+          0,
+          0
+        ],
+        [
+          6.4,
+          0
+        ],
+        [
+          6.4,
+          9.2
+        ],
+        [
+          0,
+          9.2
+        ]
+      ],
+      "doorAt": [
+        0.9,
+        9.2
+      ],
+      "workFootprint": [
+        [
+          1.6,
+          2.4
+        ],
+        [
+          4.8,
+          2.4
+        ],
+        [
+          4.8,
+          5.6
+        ],
+        [
+          1.6,
+          5.6
+        ]
+      ],
+      "cameras": [
+        {
+          "sequence": 1,
+          "at": [
+            1.2,
+            8.4
+          ],
+          "bearingDeg": 10
+        },
+        {
+          "sequence": 2,
+          "at": [
+            5.4,
+            7.4
+          ],
+          "bearingDeg": 320
+        },
+        {
+          "sequence": 3,
+          "at": [
+            3.2,
+            1.1
+          ],
+          "bearingDeg": 180
+        }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "sw-2019-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": {
+        "src": "/media/demo/sw-2019-01.jpg",
+        "width": 2400,
+        "height": 1600,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A diagram of a small gallery room seen frontally: a dark rectangular volume stands on the floor against a pale wall, a shallow oval pool of lighter tone spreads in front of it, and a standing figure at the right gives the scale.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et diagram af et lille udstillingsrum set forfra: et mørkt rektangulært volumen står på gulvet mod en lys væg, en lav oval sø i lysere tone breder sig foran det, og en stående figur til højre angiver målestokken."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "mette-kirk",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "caption": {
+        "en": "Installation view from the entrance.",
+        "da": "Installationsview fra indgangen."
+      },
+      "viewingDistanceM": 4.2
+    },
+    {
+      "id": "sw-2019-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": {
+        "src": "/media/demo/sw-2019-02.jpg",
+        "width": 1500,
+        "height": 2000,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. The same room drawn in portrait format from the right-hand corner. The dark volume fills the upper two thirds; the pool reads as a flat ellipse beneath it.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Samme rum tegnet i portrætformat fra højre hjørne. Det mørke volumen fylder de øverste to tredjedele; søen læses som en flad ellipse nedenunder."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "mette-kirk",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "viewingDistanceM": 2.6
+    },
+    {
+      "id": "sw-2019-03",
+      "kind": "image",
+      "role": "detail",
+      "sequence": 3,
+      "file": {
+        "src": "/media/demo/sw-2019-03.jpg",
+        "width": 1800,
+        "height": 1800,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A square detail diagram: a dark panel filling most of the frame with a lighter vertical band at the left.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et kvadratisk detaljediagram: et mørkt panel der fylder det meste af feltet med et lysere lodret bånd til venstre."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "mette-kirk",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "caption": {
+        "en": "Tray edge and water line.",
+        "da": "Bakkekant og vandlinje."
+      }
+    }
+  ],
+  "press": [],
+  "contributors": [
+    {
+      "contributor": "mette-kirk",
+      "role": "photographer"
+    }
+  ],
+  "notRecorded": {
+    "en": "No photograph carries the sound of the pumps, which is continuous and audible from the stairwell. The stillness of the surface also does not survive a still image — it only reads as stillness against the movement of a body walking past it.",
+    "da": "Intet fotografi bærer lyden af pumperne, som er vedvarende og hørbar fra trappeopgangen. Overfladens stilhed overlever heller ikke et stillbillede — den læses kun som stilhed i modsætning til bevægelsen fra en krop, der går forbi."
+  },
+  "demo": true,
+  "state": "public",
+  "lastReviewedOn": "2024-11-02"
+}

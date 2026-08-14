@@ -1,0 +1,57 @@
+{
+  "title": {
+    "original": "The Long Room",
+    "lang": "en",
+    "gloss": {
+      "da": "Det lange rum"
+    }
+  },
+  "year": 2023,
+  "materials": {
+    "en": "Timber, plasterboard, borrowed daylight, no artificial light",
+    "da": "Tømmer, gipsplader, lånt dagslys, intet kunstigt lys"
+  },
+  "dimensions": {
+    "variable": true,
+    "note": {
+      "en": "Occupies the full length of whatever room it is given; minimum 16 m.",
+      "da": "Optager hele længden af det rum, det får; mindst 16 m."
+    }
+  },
+  "existenceStatus": "extant",
+  "existenceNote": {
+    "en": "Standing, and staying up as long as Halle Sieben keeps the room.",
+    "da": "Står, og bliver stående så længe Halle Sieben beholder rummet."
+  },
+  "statementOfSignificance": {
+    "en": "The Long Room narrows a twenty-two metre hall to a corridor 1.4 metres wide, lit only by the daylight the building already admits at its far end. Walking it takes about forty seconds. There is nothing to look at along its length, which is the point: the work is the duration of the approach and the rate at which the light changes as you close on it. It cannot be photographed adequately and the documentation says so.",
+    "da": "The Long Room indsnævrer en toogtyve meter lang hal til en korridor på 1,4 meters bredde, kun oplyst af det dagslys bygningen i forvejen lukker ind for enden. Det tager omkring fyrre sekunder at gå den. Der er intet at se på undervejs, og det er netop pointen: værket er varigheden af tilgangen og den hastighed, lyset ændrer sig med, efterhånden som man nærmer sig. Det kan ikke fotograferes fyldestgørende, og det siger dokumentationen."
+  },
+  "variability": {
+    "en": "Width is fixed at 1.4 m. Length follows the room. If the far end has no daylight the work is not installed.",
+    "da": "Bredden er fast 1,4 m. Længden følger rummet. Har den fjerne ende intet dagslys, opsættes værket ikke."
+  },
+  "technical": {
+    "minimumFloorAreaM2": 24,
+    "minimumCeilingHeightM": 3.5,
+    "light": "daylight",
+    "sound": "silent",
+    "equipmentRequiredFromVenue": [
+      {
+        "en": "A room at least 16 m long with a daylight source at one end",
+        "da": "Et rum på mindst 16 m med en dagslyskilde i den ene ende"
+      }
+    ],
+    "installCrewSize": 3,
+    "installDays": 5,
+    "visibility": "public"
+  },
+  "tags": [
+    "borrowed-light"
+  ],
+  "demo": true,
+  "state": "public",
+  "featured": true,
+  "featuredRank": 2,
+  "lastReviewedOn": "2024-11-02"
+}

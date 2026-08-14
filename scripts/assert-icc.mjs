@@ -10,7 +10,7 @@
  * Fails the build when any derivative has lost its profile or carries an unexpected one.
  */
 import { readdir, stat } from 'node:fs/promises'
-import { join, dirname, basename } from 'node:path'
+import { join, dirname, basename, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
@@ -31,9 +31,32 @@ try {
   process.exit(1)
 }
 
-for (const name of await readdir(derivedDir)) {
-  if (!/\.(avif|webp|jpe?g)$/i.test(name)) continue
-  const file = join(derivedDir, name)
+/*
+ * RECURSIVE, not a flat listing.
+ *
+ * Derivatives mirror the source layout under /media/, so a source at
+ * public/media/demo/x.jpg produces public/media/derived/demo/x-960.avif. A flat
+ * `readdir` walked only the top level and reported "✓ 123 derivatives carry an sRGB
+ * profile" while 201 files in a subdirectory went unchecked — a green tick asserting
+ * colour fidelity over a third of the archive it had never opened.
+ *
+ * That is the worst possible failure for this particular guard. It is the one thing
+ * standing between the artwork and a silent sRGB conversion after a dependency bump, and
+ * a check that quietly narrows its own scope is more dangerous than no check, because it
+ * is trusted.
+ */
+async function derivatives(dir) {
+  const out = []
+  for (const e of await readdir(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name)
+    if (e.isDirectory()) out.push(...await derivatives(p))
+    else if (/\.(avif|webp|jpe?g)$/i.test(e.name)) out.push(p)
+  }
+  return out
+}
+
+for (const file of await derivatives(derivedDir)) {
+  const name = relative(derivedDir, file)
 
   let meta
   try {

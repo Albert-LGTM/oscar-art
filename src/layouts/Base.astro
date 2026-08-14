@@ -19,10 +19,23 @@ interface Props {
    * a link preview is still a reproduction of the work.
    */
   socialAsset?: string
+  /**
+   * True when the page's subject is a DEMONSTRATION record.
+   *
+   * Emits `noindex, nofollow` and suppresses the social card. A fabricated exhibition
+   * line indexed under the artist's name is exactly the harm the demo flag exists to
+   * prevent, and once Google has it, removing the record from the site does not remove
+   * it from the index for weeks. `nofollow` matters as much as `noindex` here: without
+   * it a crawler still walks from a demo showing to the invented venue and exhibition
+   * pages behind it.
+   */
+  demo?: boolean
 }
 
-const { locale, title, description, canonical, bareTitle = false, socialAsset } = Astro.props
-const socialUrl = socialAsset ? new URL(`/media/social/${socialAsset}.jpg`, Astro.site).href : null
+const { locale, title, description, canonical, bareTitle = false, socialAsset, demo = false } = Astro.props
+// A demo record must not travel. Suppressing the card as well as the index entry stops a
+// pasted link from previewing an invented show as though it were the artist's.
+const socialUrl = socialAsset && !demo ? new URL(`/media/social/${socialAsset}.jpg`, Astro.site).href : null
 const other = otherLocale(locale)
 
 const path = Astro.url.pathname
@@ -40,6 +53,7 @@ const documentTitle = bareTitle ? title : `${title} — ${site.artistName}`
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{documentTitle}</title>
     {description ? <meta name="description" content={description} /> : null}
+    {demo ? <meta name="robots" content="noindex, nofollow" /> : null}
 
     <link rel="canonical" href={canonicalUrl} />
     {/* Reciprocal hreflang plus x-default. For a bilingual launch this is the single

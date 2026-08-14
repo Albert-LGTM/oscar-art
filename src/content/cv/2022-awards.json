@@ -1,0 +1,12 @@
+{
+  "section": "awards",
+  "year": 2022,
+  "title": {
+    "en": "Astrid Noack Prize",
+    "da": "Astrid Noack Prisen"
+  },
+  "city": "København",
+  "country": "DK",
+  "includeInShortCv": true,
+  "demo": true
+}

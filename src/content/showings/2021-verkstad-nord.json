@@ -1,0 +1,215 @@
+{
+  "work": "standing-water",
+  "venue": "verkstad-nord",
+  "exhibition": "stillstand-2021",
+  "slug": "2021-verkstad-nord",
+  "dates": {
+    "start": "2021-09-04",
+    "end": "2021-11-14",
+    "precision": "day"
+  },
+  "kind": "restaging",
+  "asInstalledDimensions": {
+    "variable": false,
+    "heightCm": 8,
+    "widthCm": 560,
+    "depthCm": 470
+  },
+  "space": {
+    "roomWidthM": 14.0,
+    "roomDepthM": 11.5,
+    "ceilingHeightM": 6.8,
+    "floorAreaM2": 161,
+    "dedicatedSpace": true,
+    "light": "ambient",
+    "soundIsolation": false,
+    "wallSurface": {
+      "en": "Painted plasterboard",
+      "da": "Malede gipsplader"
+    },
+    "floorSurface": {
+      "en": "Poured concrete, level within 3 mm",
+      "da": "Støbt beton, plant inden for 3 mm"
+    },
+    "plan": {
+      "vertices": [
+        [
+          0,
+          0
+        ],
+        [
+          14.0,
+          0
+        ],
+        [
+          14.0,
+          11.5
+        ],
+        [
+          0,
+          11.5
+        ]
+      ],
+      "doorAt": [
+        13.1,
+        11.5
+      ],
+      "workFootprint": [
+        [
+          4.2,
+          3.4
+        ],
+        [
+          9.8,
+          3.4
+        ],
+        [
+          9.8,
+          8.1
+        ],
+        [
+          4.2,
+          8.1
+        ]
+      ],
+      "cameras": [
+        {
+          "sequence": 1,
+          "at": [
+            12.7,
+            10.4
+          ],
+          "bearingDeg": 295
+        },
+        {
+          "sequence": 2,
+          "at": [
+            7.0,
+            10.8
+          ],
+          "bearingDeg": 0
+        },
+        {
+          "sequence": 3,
+          "at": [
+            1.5,
+            5.8
+          ],
+          "bearingDeg": 90
+        }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "sw-2021-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": {
+        "src": "/media/demo/sw-2021-01.jpg",
+        "width": 2600,
+        "height": 1400,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A wide diagram of a large hall: a dark horizontal volume centre-left, a broad pale oval on the floor before it, a narrow vertical strip at the right, and a standing figure at the far right.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et bredt diagram af en stor hal: et mørkt vandret volumen til venstre for midten, en bred lys oval på gulvet foran, en smal lodret stribe til højre og en stående figur yderst til højre."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "jonas-berg",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "caption": {
+        "en": "Installation view, Stillstand.",
+        "da": "Installationsview, Stillstand."
+      },
+      "viewingDistanceM": 7.5
+    },
+    {
+      "id": "sw-2021-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": {
+        "src": "/media/demo/sw-2021-02.jpg",
+        "width": 2400,
+        "height": 1600,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. An oblique diagram: the water plane drawn as a flat parallelogram receding to the left, a pale vertical marker behind it, a figure at the right.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et skråt diagram: vandplanet tegnet som et fladt parallelogram der løber tilbage mod venstre, en lys lodret markør bagved og en figur til højre."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "jonas-berg",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "viewingDistanceM": 5.1
+    },
+    {
+      "id": "sw-2021-03",
+      "kind": "image",
+      "role": "detail",
+      "sequence": 3,
+      "file": {
+        "src": "/media/demo/sw-2021-03.jpg",
+        "width": 1800,
+        "height": 1800,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A square detail diagram of a dark panel with a lighter vertical band.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et kvadratisk detaljediagram af et mørkt panel med et lysere lodret bånd."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "jonas-berg",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "caption": {
+        "en": "Pump housing at the tray joint.",
+        "da": "Pumpehus ved bakkesamlingen."
+      }
+    }
+  ],
+  "press": [
+    "vandet-der-blev-staaende"
+  ],
+  "contributors": [
+    {
+      "contributor": "jonas-berg",
+      "role": "photographer"
+    },
+    {
+      "contributor": "ida-lindqvist",
+      "role": "curator"
+    },
+    {
+      "contributor": "rasmus-thau",
+      "role": "media-technician"
+    }
+  ],
+  "note": {
+    "en": "The largest realisation to date. At this footprint the plane needed six pumps rather than four.",
+    "da": "Den hidtil største opførelse. Ved denne grundflade krævede planet seks pumper i stedet for fire."
+  },
+  "notRecorded": {
+    "en": "The six-metre ceiling is not legible in any of these images; the room reads as much lower than it is.",
+    "da": "Loftshøjden på seks meter kan ikke aflæses på nogen af disse billeder; rummet virker langt lavere, end det er."
+  },
+  "demo": true,
+  "state": "public",
+  "lastReviewedOn": "2024-11-02"
+}

@@ -1,0 +1,13 @@
+{
+  "section": "collections",
+  "year": 2023,
+  "title": {
+    "en": "Public collection",
+    "da": "Offentlig samling"
+  },
+  "city": "Berlin",
+  "country": "DE",
+  "includeInShortCv": false,
+  "demo": true,
+  "organisation": "Halle Sieben Sammlung"
+}

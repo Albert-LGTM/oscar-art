@@ -1,0 +1,80 @@
+---
+import type { Locale } from '../lib/i18n'
+
+/**
+ * The demonstration banner.
+ *
+ * Placed FIRST inside the record, above the title, and never inside a `<details>`. A
+ * disclosure a reader has to open is not a disclosure — and the whole point of this
+ * element is that nobody can read a paragraph of an invented exhibition history without
+ * having already been told it is invented.
+ *
+ * It is `<aside role="note">` rather than `role="alert"`: an alert interrupts a screen
+ * reader mid-utterance and is reserved for things that change while you are reading.
+ * This is standing context about the document, which is what a note is for.
+ *
+ * The accent border is not the only carrier — the text says it outright, so the notice
+ * survives forced-colors, greyscale printing and a reader who does not see the rule.
+ */
+interface Props {
+  locale: Locale
+  /** What kind of record this is, so the sentence names the right noun. */
+  of?: 'work' | 'showing' | 'exhibition' | 'venue' | 'text'
+}
+
+const { locale, of = 'work' } = Astro.props
+
+/*
+ * The Danish demonstrative agrees with GRAMMATICAL GENDER, so it cannot be a constant
+ * concatenated onto a noun: `værk` and `sted` are neuter (dette værk, dette sted) while
+ * `opførelse`, `udstilling` and `tekst` are common (denne opførelse). Building the string
+ * as `denne ${noun}` produced "denne værk", which is wrong in the first four words of a
+ * notice whose entire job is to be believed.
+ *
+ * Whole phrases, therefore, rather than a template with a hole in it — the same reason
+ * the route segments are a lookup table instead of a slugify() call.
+ */
+const LEAD: Record<string, { en: string; da: string }> = {
+  work: { en: 'this work is invented', da: 'dette værk er opdigtet' },
+  showing: { en: 'this showing is invented', da: 'denne opførelse er opdigtet' },
+  exhibition: { en: 'this exhibition is invented', da: 'denne udstilling er opdigtet' },
+  venue: { en: 'this venue is invented', da: 'dette sted er opdigtet' },
+  text: { en: 'this text is invented', da: 'denne tekst er opdigtet' },
+}
+const lead = LEAD[of]![locale]
+---
+
+<aside class="demo" role="note" lang={locale}>
+  <p class="demo__lead">Demonstration — {lead}.</p>
+  <p class="demo__body">
+    {locale === 'da'
+      ? 'Den er skrevet for at vise, hvad arkivet kan, når felterne er udfyldt: plantegning, opførelsesrækken, gennemgang af synsvinkler, teknisk ark og presse. Den hører ikke til Oscar de Palos virkelige værkfortegnelse, billederne er syntetiske tegninger og ikke fotografier, og sted, datoer, fotografer og anmeldelser findes ikke. Siden er markeret noindex.'
+      : 'It exists to show what the archive does once its fields are filled in: the floor plan, the iteration ledger, the viewpoint traversal, the technical record and the press. It is not part of Oscar de Palo’s real body of work, the images are synthetic drawings rather than photographs, and the venue, dates, photographers and reviews do not exist. This page is marked noindex.'}
+  </p>
+</aside>
+
+<style>
+  .demo {
+    border: 1px solid var(--rule-strong);
+    /* A left rule reads as an editorial aside in both themes without introducing a fill
+       that would sit next to a plate and shift its perceived colour. */
+    border-left-width: 4px;
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-5);
+    max-width: var(--measure);
+  }
+
+  .demo__lead {
+    font: var(--type-meta-strong);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0;
+  }
+
+  .demo__body {
+    font: var(--type-caption);
+    color: var(--ink-secondary);
+    margin: var(--space-2) 0 0;
+    text-wrap: pretty;
+  }
+</style>

@@ -1,0 +1,171 @@
+{
+  "work": "the-long-room",
+  "venue": "halle-sieben",
+  "exhibition": "nachtschicht-2023",
+  "slug": "2023-halle-sieben-long",
+  "dates": {
+    "start": "2023-03-11",
+    "end": "2023-06-25",
+    "precision": "day"
+  },
+  "kind": "first-realisation",
+  "asInstalledDimensions": {
+    "variable": false,
+    "heightCm": 350,
+    "widthCm": 140,
+    "depthCm": 2200
+  },
+  "space": {
+    "roomWidthM": 4.2,
+    "roomDepthM": 22.0,
+    "ceilingHeightM": 4.6,
+    "floorAreaM2": 92.4,
+    "dedicatedSpace": true,
+    "light": "daylight",
+    "soundIsolation": false,
+    "wallSurface": {
+      "en": "Plasterboard, unpainted",
+      "da": "Gipsplader, umalede"
+    },
+    "floorSurface": {
+      "en": "Epoxy over concrete",
+      "da": "Epoxy på beton"
+    },
+    "plan": {
+      "vertices": [
+        [
+          0,
+          0
+        ],
+        [
+          4.2,
+          0
+        ],
+        [
+          4.2,
+          22.0
+        ],
+        [
+          0,
+          22.0
+        ]
+      ],
+      "doorAt": [
+        2.1,
+        22.0
+      ],
+      "workFootprint": [
+        [
+          1.4,
+          2.0
+        ],
+        [
+          2.8,
+          2.0
+        ],
+        [
+          2.8,
+          20.0
+        ],
+        [
+          1.4,
+          20.0
+        ]
+      ],
+      "cameras": [
+        {
+          "sequence": 1,
+          "at": [
+            2.1,
+            21.2
+          ],
+          "bearingDeg": 0
+        },
+        {
+          "sequence": 2,
+          "at": [
+            2.1,
+            11.0
+          ],
+          "bearingDeg": 0
+        }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "tlr-2023-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": {
+        "src": "/media/demo/tlr-2023-01.jpg",
+        "width": 3200,
+        "height": 1230,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A panoramic diagram, two and a half times wider than tall: five dark vertical slabs stand in a receding row along a pale floor, each shorter than the last, with a standing figure at the right for scale.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et panoramisk diagram, halvtredje gang så bredt som højt: fem mørke lodrette plader står på række, der løber bort langs et lyst gulv, hver kortere end den forrige, med en stående figur til højre som målestok."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "mette-kirk",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "caption": {
+        "en": "The corridor seen from the entrance end.",
+        "da": "Korridoren set fra indgangsenden."
+      },
+      "viewingDistanceM": 21.0
+    },
+    {
+      "id": "tlr-2023-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": {
+        "src": "/media/demo/tlr-2023-02.jpg",
+        "width": 2400,
+        "height": 1600,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. An oblique diagram from halfway along: the wall plane recedes sharply to the left, a pale vertical marker stands behind it.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et skråt diagram fra halvvejs inde: vægplanet løber skarpt tilbage mod venstre, en lys lodret markør står bagved."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "mette-kirk",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "viewingDistanceM": 11.0
+    }
+  ],
+  "press": [
+    "tjugotva-meter"
+  ],
+  "contributors": [
+    {
+      "contributor": "mette-kirk",
+      "role": "photographer"
+    },
+    {
+      "contributor": "ida-lindqvist",
+      "role": "curator"
+    }
+  ],
+  "notRecorded": {
+    "en": "The work is forty seconds of walking. A photograph gives you the whole length at once, which is the one experience the room does not offer.",
+    "da": "Værket er fyrre sekunders gang. Et fotografi giver hele længden på én gang, og det er netop den oplevelse, rummet ikke tilbyder."
+  },
+  "demo": true,
+  "state": "public",
+  "lastReviewedOn": "2024-11-02"
+}

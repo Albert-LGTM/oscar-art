@@ -1,0 +1,15 @@
+{
+  "name": {
+    "original": "Halle Sieben",
+    "lang": "en"
+  },
+  "city": "Berlin",
+  "country": "DE",
+  "kind": "institution",
+  "visitingInfo": {
+    "en": "Two connected halls in a former transformer station; the long room runs 22 metres.",
+    "da": "To forbundne haller i en tidligere transformerstation; det lange rum er 22 meter."
+  },
+  "demo": true,
+  "state": "public"
+}

@@ -18,10 +18,11 @@
  *   2. Derivatives are never upscaled past the source's native width. An upscaled
  *      derivative is a fabricated version of the work.
  */
-import { readdir, readFile, mkdir, stat } from 'node:fs/promises'
-import { join, dirname, basename, extname } from 'node:path'
+import { mkdir, stat } from 'node:fs/promises'
+import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { declaredImages } from './lib/declared-images.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const mediaDir = join(root, 'public/media')
@@ -38,16 +39,22 @@ const ENCODE = {
   jpg: (p) => p.jpeg({ quality: 86, chromaSubsampling: '4:4:4', mozjpeg: true }),
 }
 
-async function sources() {
-  const entries = await readdir(mediaDir, { withFileTypes: true })
-  return entries
-    .filter((e) => e.isFile() && /\.(jpe?g|png|tiff?)$/i.test(e.name))
-    .map((e) => join(mediaDir, e.name))
-}
-
-const files = await sources()
-if (files.length === 0) {
-  console.error('No source images in public/media/. Run `npm run seed:media` first.')
+/*
+ * Sources come from the CONTENT DECLARATIONS, not from a directory scan.
+ *
+ * This used to be a flat `readdir` of public/media/, which was wrong in both directions.
+ * A file sitting in the folder but declared by nothing still got 21 derivatives built and
+ * shipped; and a declared file in a SUBDIRECTORY — public/media/demo/… — got none at all,
+ * silently, so thirteen images resolved to 404 with a green build.
+ *
+ * `declaredImages()` is already the single source of truth for seed-media and
+ * build-social. Reading it here too means the set of files that exist is the set the
+ * archive actually references — the same fix, applied to the last script that had grown
+ * its own private walk.
+ */
+const images = await declaredImages()
+if (images.length === 0) {
+  console.error('No images declared by any work or showing. Nothing to build.')
   process.exit(1)
 }
 
@@ -55,11 +62,28 @@ await mkdir(derivedDir, { recursive: true })
 
 let written = 0
 let skipped = 0
+let missing = 0
 
-for (const file of files) {
+for (const img of images) {
+  const rel = img.src.replace(/^\/media\//, '')
+  const file = join(mediaDir, rel)
+  // Mirrors `derivativePath()` in src/lib/image.ts, which strips /media/ and the
+  // extension — so a nested source keeps its subdirectory under derived/ and the two
+  // sides agree on the URL.
+  const stem = rel.replace(/\.[^.]+$/, '')
+
+  let srcStat
+  try {
+    srcStat = await stat(file)
+  } catch {
+    // Declared but absent. Fail loudly rather than shipping a record whose plate 404s.
+    console.error(`  MISSING SOURCE: ${img.src} (declared as "${img.id}")`)
+    missing++
+    continue
+  }
+
   const meta = await sharp(file).metadata()
-  const name = basename(file, extname(file))
-  const srcStat = await stat(file)
+  await mkdir(dirname(join(derivedDir, stem)), { recursive: true })
 
   // Never upscale. A derivative wider than the source is an invented image.
   const widths = WIDTHS.filter((w) => w <= meta.width)
@@ -67,7 +91,7 @@ for (const file of files) {
 
   for (const width of widths) {
     for (const [format, encode] of Object.entries(ENCODE)) {
-      const target = join(derivedDir, `${name}-${width}.${format}`)
+      const target = join(derivedDir, `${stem}-${width}.${format}`)
 
       // Idempotent: skip when the derivative is newer than its source.
       try {
@@ -83,7 +107,12 @@ for (const file of files) {
       written++
     }
   }
-  console.log(`${name}: ${widths.length} widths × ${Object.keys(ENCODE).length} formats`)
+  console.log(`${img.id}: ${widths.length} widths × ${Object.keys(ENCODE).length} formats`)
+}
+
+if (missing > 0) {
+  console.error(`\n✗ ${missing} declared image(s) have no source file.`)
+  process.exit(1)
 }
 
 console.log(`\n${written} derivatives written, ${skipped} up to date.`)

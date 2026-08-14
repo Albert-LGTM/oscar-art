@@ -1,0 +1,25 @@
+{
+  "title": {
+    "original": "Stillstand",
+    "lang": "da",
+    "gloss": {
+      "en": "Standstill"
+    }
+  },
+  "type": "group",
+  "venue": "verkstad-nord",
+  "dates": {
+    "start": "2021-09-04",
+    "end": "2021-11-14",
+    "precision": "day"
+  },
+  "curators": [
+    "ida-lindqvist"
+  ],
+  "text": {
+    "en": "Eight artists working with duration, stoppage and the maintenance of a state. The exhibition took its title from the Danish for a machine held at rest under power — not switched off, but prevented from moving.",
+    "da": "Otte kunstnere der arbejder med varighed, standsning og vedligeholdelsen af en tilstand. Udstillingen har titel efter en maskine, der holdes i ro under spænding — ikke slukket, men forhindret i at bevæge sig."
+  },
+  "demo": true,
+  "state": "public"
+}

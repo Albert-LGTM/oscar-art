@@ -28,6 +28,25 @@ import {
 
 const asset = anyAsset()
 
+/**
+ * Marks a record as DEMONSTRATION CONTENT — invented, and not part of the artist's
+ * record.
+ *
+ * This site is an archive of record. Denmark has no maintained national authority file
+ * for a living artist (Weilbach stops at 1994), so for practical purposes this site IS
+ * the citable chronology: a curator, a funder or a researcher will take an exhibition
+ * line here as fact. Invented showings sitting indistinguishably beside real ones is
+ * therefore not a cosmetic problem, it is the precise failure the content model exists
+ * to prevent.
+ *
+ * So demo records carry a flag rather than a convention. The flag drives three things
+ * that a naming convention could not: a visible notice on the record itself, `noindex`
+ * plus sitemap exclusion so the fabrication is never syndicated, and `npm run demo:strip`,
+ * which deletes every flagged record and its media in one command when the real archive
+ * is ready.
+ */
+const demo = () => z.boolean().default(false)
+
 // ---------------------------------------------------------------------------
 // Work — the identity spine
 // ---------------------------------------------------------------------------
@@ -113,6 +132,7 @@ const works = defineCollection({
      */
     assets: z.array(asset).default([]),
 
+    demo: demo(),
     state: z.enum(PUBLICATION_STATE).default('draft'),
     featured: z.boolean().default(false),
     featuredRank: z.number().int().positive().optional(),
@@ -173,6 +193,7 @@ const showings = defineCollection({
      *  duration; naming the loss is more honest than compensating for it with an effect. */
     notRecorded: translated().optional(),
 
+    demo: demo(),
     state: z.enum(PUBLICATION_STATE).default('draft'),
     lastReviewedOn: isoDate().optional(),
   }),
@@ -194,6 +215,7 @@ const exhibitions = defineCollection({
     assets: z.array(asset).default([]),
     press: z.array(reference('press')).default([]),
     externalUrl: z.url().optional(),
+    demo: demo(),
     state: z.enum(PUBLICATION_STATE).default('draft'),
   }),
 })
@@ -210,6 +232,7 @@ const venues = defineCollection({
     website: z.url().optional(),
     /** Primary content when works are outdoor, public or permanent. */
     visitingInfo: translated().optional(),
+    demo: demo(),
     state: z.enum(PUBLICATION_STATE).default('public'),
   }),
 })
@@ -245,6 +268,7 @@ const press = defineCollection({
     urlCheckedOn: isoDate().optional(),
     excerpt: originalWithGloss().optional(),
     language: z.enum(['en', 'da', 'other']).default('en'),
+    demo: demo(),
     state: z.enum(PUBLICATION_STATE).default('public'),
   }),
 })
@@ -260,6 +284,7 @@ const texts = defineCollection({
     /** Set when this text has a parallel version in the other language. */
     counterpart: z.string().optional(),
     relatedWorks: z.array(reference('works')).default([]),
+    demo: demo(),
     state: z.enum(PUBLICATION_STATE).default('draft'),
   }),
 })
@@ -286,6 +311,7 @@ const cv = defineCollection({
      *  Artquest/O—Overgaden expect two. The same data must render at three lengths, so
      *  the short list is a curated flag rather than a separate document. */
     includeInShortCv: z.boolean().default(false),
+    demo: demo(),
   }),
 })
 

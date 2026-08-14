@@ -1,5 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro'
+import DemoNotice from '../../../components/DemoNotice.astro'
 import Plate from '../../../components/Plate.astro'
 import Caption from '../../../components/Caption.astro'
 import StructuredData from '../../../components/StructuredData.astro'
@@ -87,9 +88,12 @@ const documentTitle = w.year !== undefined ? `${workTitle}, ${w.year}` : workTit
   title={documentTitle}
   description={statement.value ?? materials.value ?? undefined}
   socialAsset={socialAsset}
+  demo={w.demo}
 >
   <StructuredData slot="head" locale={locale} work={record} />
   <article class="shell record">
+    {/* Above the title, so the frame is set before a single fact is read. */}
+    {w.demo ? <DemoNotice locale={locale} of="work" /> : null}
     <header class="record__head">
       <h1>
         <cite lang={w.title.lang}>{workTitle}</cite>

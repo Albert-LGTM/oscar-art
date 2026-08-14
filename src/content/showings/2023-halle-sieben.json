@@ -1,0 +1,167 @@
+{
+  "work": "standing-water",
+  "venue": "halle-sieben",
+  "exhibition": "nachtschicht-2023",
+  "slug": "2023-halle-sieben",
+  "dates": {
+    "start": "2023-03-11",
+    "end": "2023-06-25",
+    "precision": "day"
+  },
+  "kind": "restaging",
+  "asInstalledDimensions": {
+    "variable": false,
+    "heightCm": 8,
+    "widthCm": 460,
+    "depthCm": 460
+  },
+  "space": {
+    "roomWidthM": 9.0,
+    "roomDepthM": 12.4,
+    "ceilingHeightM": 4.6,
+    "floorAreaM2": 111.6,
+    "dedicatedSpace": true,
+    "light": "low",
+    "soundIsolation": true,
+    "wallSurface": {
+      "en": "Bare concrete",
+      "da": "Rå beton"
+    },
+    "floorSurface": {
+      "en": "Epoxy over concrete",
+      "da": "Epoxy på beton"
+    },
+    "plan": {
+      "vertices": [
+        [
+          0,
+          0
+        ],
+        [
+          9.0,
+          0
+        ],
+        [
+          9.0,
+          12.4
+        ],
+        [
+          0,
+          12.4
+        ]
+      ],
+      "doorAt": [
+        4.5,
+        12.4
+      ],
+      "workFootprint": [
+        [
+          2.2,
+          3.8
+        ],
+        [
+          6.8,
+          3.8
+        ],
+        [
+          6.8,
+          8.4
+        ],
+        [
+          2.2,
+          8.4
+        ]
+      ],
+      "cameras": [
+        {
+          "sequence": 1,
+          "at": [
+            4.4,
+            11.6
+          ],
+          "bearingDeg": 0
+        },
+        {
+          "sequence": 2,
+          "at": [
+            8.1,
+            9.3
+          ],
+          "bearingDeg": 315
+        }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "sw-2023-01",
+      "kind": "image",
+      "role": "establishing",
+      "sequence": 1,
+      "file": {
+        "src": "/media/demo/sw-2023-01.jpg",
+        "width": 2400,
+        "height": 1800,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. A diagram in a darker key: a dark volume against a mid-grey wall, a dim oval on the floor, a figure at the right.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et diagram i en mørkere toneart: et mørkt volumen mod en mellemgrå væg, en dæmpet oval på gulvet, en figur til højre."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "jonas-berg",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "caption": {
+        "en": "Installation view, Nachtschicht.",
+        "da": "Installationsview, Nachtschicht."
+      },
+      "viewingDistanceM": 6.0
+    },
+    {
+      "id": "sw-2023-02",
+      "kind": "image",
+      "role": "viewpoint",
+      "sequence": 2,
+      "file": {
+        "src": "/media/demo/sw-2023-02.jpg",
+        "width": 2400,
+        "height": 1600,
+        "colourProfile": "sRGB IEC61966-2.1"
+      },
+      "alt": {
+        "described": {
+          "en": "Synthetic demonstration plate, not a photograph. An oblique diagram in low light: the plane recedes to the left, a vertical marker stands behind it.",
+          "da": "Syntetisk demonstrationsplade, ikke et fotografi. Et skråt diagram i dæmpet lys: planet løber tilbage mod venstre, en lodret markør står bagved."
+        },
+        "decorative": false
+      },
+      "credit": {
+        "photographer": "jonas-berg",
+        "photoCreditKind": "by",
+        "artworkCopyright": "Oscar de Palo"
+      },
+      "viewingDistanceM": 4.4
+    }
+  ],
+  "press": [
+    "tjugotva-meter"
+  ],
+  "contributors": [
+    {
+      "contributor": "jonas-berg",
+      "role": "photographer"
+    },
+    {
+      "contributor": "ida-lindqvist",
+      "role": "curator"
+    }
+  ],
+  "demo": true,
+  "state": "public",
+  "lastReviewedOn": "2024-11-02"
+}

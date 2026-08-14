@@ -1,0 +1,15 @@
+{
+  "name": {
+    "original": "Magasin B",
+    "lang": "da"
+  },
+  "city": "København",
+  "country": "DK",
+  "kind": "artist-run",
+  "visitingInfo": {
+    "en": "A former grain store on the Nordhavn quay, run by artists since 2016. Two rooms, no daylight control.",
+    "da": "Et tidligere kornmagasin på Nordhavns kaj, drevet af kunstnere siden 2016. To rum, ingen mulighed for at styre dagslyset."
+  },
+  "demo": true,
+  "state": "public"
+}

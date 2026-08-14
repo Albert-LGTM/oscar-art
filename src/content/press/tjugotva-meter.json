@@ -1,0 +1,20 @@
+{
+  "title": {
+    "original": "Tjugotvå meter",
+    "lang": "da"
+  },
+  "publication": "Kunstkritikk",
+  "author": "Elin Sandgren",
+  "date": "2023-05-02",
+  "language": "other",
+  "excerpt": {
+    "original": "The long room is the argument. Nothing in it would read at half the length.",
+    "lang": "en",
+    "gloss": {
+      "en": "The long room is the argument. Nothing in it would read at half the length.",
+      "da": "Det lange rum er argumentet. Intet i det ville kunne læses på den halve længde."
+    }
+  },
+  "demo": true,
+  "state": "public"
+}

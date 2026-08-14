@@ -1,0 +1,13 @@
+{
+  "section": "grants",
+  "year": 2019,
+  "title": {
+    "en": "Working grant",
+    "da": "Arbejdslegat"
+  },
+  "city": "København",
+  "country": "DK",
+  "includeInShortCv": true,
+  "demo": true,
+  "organisation": "Statens Kunstfond"
+}

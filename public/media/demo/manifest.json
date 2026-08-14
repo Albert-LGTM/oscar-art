@@ -1,0 +1,80 @@
+[
+  {
+    "id": "sw-2019-01",
+    "src": "/media/demo/sw-2019-01.jpg",
+    "width": 2400,
+    "height": 1600
+  },
+  {
+    "id": "sw-2019-02",
+    "src": "/media/demo/sw-2019-02.jpg",
+    "width": 1500,
+    "height": 2000
+  },
+  {
+    "id": "sw-2019-03",
+    "src": "/media/demo/sw-2019-03.jpg",
+    "width": 1800,
+    "height": 1800
+  },
+  {
+    "id": "sw-2021-01",
+    "src": "/media/demo/sw-2021-01.jpg",
+    "width": 2600,
+    "height": 1400
+  },
+  {
+    "id": "sw-2021-02",
+    "src": "/media/demo/sw-2021-02.jpg",
+    "width": 2400,
+    "height": 1600
+  },
+  {
+    "id": "sw-2021-03",
+    "src": "/media/demo/sw-2021-03.jpg",
+    "width": 1800,
+    "height": 1800
+  },
+  {
+    "id": "sw-2023-01",
+    "src": "/media/demo/sw-2023-01.jpg",
+    "width": 2400,
+    "height": 1800
+  },
+  {
+    "id": "sw-2023-02",
+    "src": "/media/demo/sw-2023-02.jpg",
+    "width": 2400,
+    "height": 1600
+  },
+  {
+    "id": "ns-2021-01",
+    "src": "/media/demo/ns-2021-01.jpg",
+    "width": 2400,
+    "height": 1600
+  },
+  {
+    "id": "ns-2021-02",
+    "src": "/media/demo/ns-2021-02.jpg",
+    "width": 1500,
+    "height": 2000
+  },
+  {
+    "id": "ns-2021-03",
+    "src": "/media/demo/ns-2021-03.jpg",
+    "width": 1800,
+    "height": 1800
+  },
+  {
+    "id": "tlr-2023-01",
+    "src": "/media/demo/tlr-2023-01.jpg",
+    "width": 3200,
+    "height": 1230
+  },
+  {
+    "id": "tlr-2023-02",
+    "src": "/media/demo/tlr-2023-02.jpg",
+    "width": 2400,
+    "height": 1600
+  }
+]

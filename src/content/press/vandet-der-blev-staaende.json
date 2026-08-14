@@ -1,0 +1,20 @@
+{
+  "title": {
+    "original": "Vandet der blev stående",
+    "lang": "da"
+  },
+  "publication": "Dagbladet Information",
+  "author": "Sofie Krarup",
+  "date": "2021-09-22",
+  "language": "da",
+  "excerpt": {
+    "original": "Pumperne kan høres, før vandet kan ses. De Palo har bygget en maskine, hvis eneste produkt er stilstand.",
+    "lang": "da",
+    "gloss": {
+      "en": "The pumps are audible before the water is visible. De Palo has built a machine whose entire output is stillness.",
+      "da": "Pumperne kan høres, før vandet kan ses. De Palo har bygget en maskine, hvis eneste produkt er stilstand."
+    }
+  },
+  "demo": true,
+  "state": "public"
+}

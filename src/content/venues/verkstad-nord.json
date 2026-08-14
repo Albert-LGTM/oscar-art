@@ -1,0 +1,15 @@
+{
+  "name": {
+    "original": "Verkstad Nord",
+    "lang": "da"
+  },
+  "city": "Malmö",
+  "country": "SE",
+  "kind": "kunsthal",
+  "visitingInfo": {
+    "en": "A single 160 m² hall with a six-metre ceiling and an overhead gantry.",
+    "da": "En enkelt hal på 160 m² med seks meter til loftet og en travers i taget."
+  },
+  "demo": true,
+  "state": "public"
+}

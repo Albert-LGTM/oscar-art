@@ -1,0 +1,20 @@
+{
+  "title": {
+    "original": "A room that keeps its own hours",
+    "lang": "en"
+  },
+  "publication": "Frieze",
+  "author": "Owen Whitfield",
+  "date": "2023-04-19",
+  "language": "en",
+  "excerpt": {
+    "original": "Nightshift did not survive its own exhibition, and the record of it is better for having said so plainly.",
+    "lang": "en",
+    "gloss": {
+      "en": "Nightshift did not survive its own exhibition, and the record of it is better for having said so plainly.",
+      "da": "Nightshift overlevede ikke sin egen udstilling, og optegnelsen af den er bedre af at have sagt det ligeud."
+    }
+  },
+  "demo": true,
+  "state": "public"
+}
